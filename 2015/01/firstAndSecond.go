@@ -13,17 +13,25 @@ func main() {
 	check(err)
 
 	floor := 0
+	var position int
 
-	for _, char := range string(dat) {
+	for number, char := range string(dat) {
 		if char == '(' {
 			floor++
 		}
 		if char == ')' {
 			floor--
 		}
+		if floor == -1 && position == 0 {
+			position = number + 1
+		}
 	}
 
+	fmt.Printf("Position where he ends: ")
 	fmt.Println(floor)
+
+	fmt.Printf("Position where he first enters the basement: ")
+	fmt.Println(position)
 
 }
 
