@@ -14,8 +14,8 @@ func main() {
 
 	low1, low2 := Mine(secret)
 
-	fmt.Printf("The lowest Number with 5 trailing 0 in hash for the given secret is: %d", low1)
-	fmt.Printf("The lowest Number with 6 trailing 0 in hash for the given secret is: %d", low2)
+	fmt.Println("The lowest Number with 5 trailing 0 in hash for the given secret is: ", low1)
+	fmt.Println("The lowest Number with 6 trailing 0 in hash for the given secret is: ", low2)
 }
 
 func Mine(secret string) (lowestNumber1, lowestNumber2 int) {
