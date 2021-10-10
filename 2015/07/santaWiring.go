@@ -23,7 +23,6 @@ func (w *Wire) GetUint(wiring map[string]*Wire, caller string) uint16 {
 		panic("FUCKING HELL " + caller + " What did you do?")
 	}
 	if w.Solved {
-		fmt.Println("Solved", w.Name)
 		return w.value
 	}
 
@@ -48,7 +47,6 @@ func (w *Wire) GetUint(wiring map[string]*Wire, caller string) uint16 {
 		w.value = value1 | valueForWire(w.ref2, wiring, caller)
 		w.Solved = true
 	}
-	fmt.Println(w.Name)
 	return w.value
 }
 
@@ -78,7 +76,16 @@ func main() {
 	WireMap(scannedStrings, wiring)
 
 	wireA := wiring["a"]
-	fmt.Println("The Value of a is: ", wireA.GetUint(wiring, "main class"))
+	signalA := wireA.GetUint(wiring, "main class")
+	fmt.Println("The Value of a is: ", signalA)
+
+	wiring2 := map[string]*Wire{}
+	WireMap(scannedStrings, wiring2)
+	wiring2["b"] = &Wire{value: signalA, operation: "IS", Name: "b", Solved: true}
+
+	wireA2 := wiring2["a"]
+	signalA2 := wireA2.GetUint(wiring2, "main class")
+	fmt.Println("The Value of a is after the change: ", signalA2)
 }
 
 func WireMap(stringList []string, wiring map[string]*Wire) {
