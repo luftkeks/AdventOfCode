@@ -8,71 +8,49 @@ import (
 	"strings"
 )
 
-type Set struct {
-	x string
+type Wire struct {
+	Name      string
+	value     uint16
+	Solved    bool
+	ref1      string
+	ref2      string
+	shift     uint16
+	operation string
 }
 
-type And struct {
-	x, y string
+type Wiring struct {
+	Wiring map[string]Wire
 }
 
-type Or struct {
-	x, y string
-}
-
-type Not struct {
-	x string
-}
-
-type Rshift struct {
-	x      string
-	number int
-}
-
-type Lshift struct {
-	x      string
-	number int
-}
-
-type Dummy struct {
-	number uint16
-}
-
-type Wire interface {
-	Get(Wiring) uint16
-}
-
-type Wiring map[string]Wire
-
-func (w Wiring) Get(name string) Wire {
-	if isStringNumber(name) {
-		numb, _ := strconv.Atoi(name)
-		return Dummy{number: uint16(numb)}
-	} else {
-		return w[name]
+func (v Wire) GetUint(wiring map[string]Wire) uint16 {
+	if v.Solved {
+		return v.value
+	} else if v.operation == "NOT" {
+		v.value = ^wiring[v.ref1].GetUint(wiring)
+		v.Solved = true
+	} else if v.operation == "IS" {
+		v.value = wiring[v.ref1].GetUint(wiring)
+		v.Solved = true
+	} else if v.operation == "AND" {
+		v.value = wiring[v.ref1].GetUint(wiring) & wiring[v.ref2].GetUint(wiring)
+		v.Solved = true
+	} else if v.operation == "OR" {
+		v.value = wiring[v.ref1].GetUint(wiring) | wiring[v.ref2].GetUint(wiring)
+		v.Solved = true
+	} else if v.operation == "LSHIFT" {
+		v.value = wiring[v.ref1].GetUint(wiring) << v.shift
+		v.Solved = true
+	} else if v.operation == "RSHIFT" {
+		v.value = wiring[v.ref1].GetUint(wiring) >> v.shift
+		v.Solved = true
 	}
+	fmt.Println(v.Name)
+	return v.value
 }
 
-func (d Dummy) Get(wiring Wiring) uint16 {
-	return d.number
+func (w *Wiring) Get(name string) Wire {
+	return w.Wiring[name]
 }
-
-func (s Set) Get(wiring Wiring) uint16 {
-	return wiring.Get(s.x).Get(wiring)
-}
-func (a And) Get(wiring Wiring) uint16 {
-	return wiring.Get(a.x).Get(wiring) & wiring.Get(a.y).Get(wiring)
-}
-func (o Or) Get(wiring Wiring) uint16 {
-	return wiring.Get(o.x).Get(wiring) | wiring.Get(o.y).Get(wiring)
-}
-func (l Lshift) Get(wiring Wiring) uint16 {
-	return wiring.Get(l.x).Get(wiring) << uint16(l.number)
-}
-func (r Rshift) Get(wiring Wiring) uint16 {
-	return wiring.Get(r.x).Get(wiring) >> uint16(r.number)
-}
-func (n Not) Get(wiring Wiring) uint16 { return ^wiring.Get(n.x).Get(wiring) }
 
 func main() {
 	commandLineArgs := os.Args
@@ -84,36 +62,36 @@ func main() {
 		scannedStrings = append(scannedStrings, scanner.Text())
 	}
 
-	wiring := Wiring{}
+	wiring := map[string]Wire{}
 
 	WireMap(scannedStrings, wiring)
 
-	fmt.Println("The Value of a is: ", wiring.Get("a").Get(wiring))
+	fmt.Println("The Value of a is: ", wiring["a"].GetUint(wiring))
 }
 
 func WireMap(stringList []string, wiring map[string]Wire) {
 	for _, line := range stringList {
-		wire, name := parseLine(line, wiring)
-		wiring[name] = wire
+		wire := parseLine(line)
+		wiring[wire.Name] = wire
 	}
 }
 
-func parseLine(line string, wiring map[string]Wire) (node Wire, name string) {
+func parseLine(line string) (node Wire) {
 	words := strings.Split(line, " ")
 	if len(words) == 3 {
-		return Set{x: words[0]}, words[2]
-	} else if len(words) == 4 {
-		return Not{x: words[1]}, words[3]
-	} else if len(words) == 5 && words[1] == "AND" {
-		return And{x: words[0], y: words[2]}, words[4]
-	} else if len(words) == 5 && words[1] == "OR" {
-		return Or{x: words[0], y: words[2]}, words[4]
-	} else if len(words) == 5 && words[1] == "LSHIFT" {
+		if isStringNumber(words[0]) {
+			number, _ := strconv.Atoi(words[0])
+			return Wire{Solved: true, value: uint16(number), Name: words[2]}
+		} else {
+			return Wire{ref1: words[0], operation: "IS", Name: words[2], Solved: false}
+		}
+	} else if len(words) == 4 && words[0] == "NOT" {
+		return Wire{ref1: words[1], operation: "NOT", Name: words[3], Solved: false}
+	} else if len(words) == 5 && (words[1] == "AND" || words[1] == "OR") {
+		return Wire{ref1: words[0], ref2: words[2], Name: words[4], Solved: false}
+	} else if len(words) == 5 && (words[1] == "LSHIFT" || words[1] == "RSHIFT") {
 		numb, _ := strconv.Atoi(words[2])
-		return Lshift{x: words[0], number: numb}, words[4]
-	} else if len(words) == 5 && words[1] == "RSHIFT" {
-		numb, _ := strconv.Atoi(words[2])
-		return Rshift{x: words[0], number: numb}, words[4]
+		return Wire{ref1: words[0], shift: uint16(numb), Name: words[4], Solved: false}
 	}
 	panic("HELP")
 }
