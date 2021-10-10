@@ -18,38 +18,49 @@ type Wire struct {
 	operation string
 }
 
-type Wiring struct {
-	Wiring map[string]Wire
-}
-
-func (v Wire) GetUint(wiring map[string]Wire) uint16 {
-	if v.Solved {
-		return v.value
-	} else if v.operation == "NOT" {
-		v.value = ^wiring[v.ref1].GetUint(wiring)
-		v.Solved = true
-	} else if v.operation == "IS" {
-		v.value = wiring[v.ref1].GetUint(wiring)
-		v.Solved = true
-	} else if v.operation == "AND" {
-		v.value = wiring[v.ref1].GetUint(wiring) & wiring[v.ref2].GetUint(wiring)
-		v.Solved = true
-	} else if v.operation == "OR" {
-		v.value = wiring[v.ref1].GetUint(wiring) | wiring[v.ref2].GetUint(wiring)
-		v.Solved = true
-	} else if v.operation == "LSHIFT" {
-		v.value = wiring[v.ref1].GetUint(wiring) << v.shift
-		v.Solved = true
-	} else if v.operation == "RSHIFT" {
-		v.value = wiring[v.ref1].GetUint(wiring) >> v.shift
-		v.Solved = true
+func (w *Wire) GetUint(wiring map[string]*Wire, caller string) uint16 {
+	if w == nil {
+		panic("FUCKING HELL " + caller + " What did you do?")
 	}
-	fmt.Println(v.Name)
-	return v.value
+	if w.Solved {
+		fmt.Println("Solved", w.Name)
+		return w.value
+	}
+
+	value1 := valueForWire(w.ref1, wiring, caller)
+
+	if w.operation == "NOT" {
+		w.value = ^value1
+		w.Solved = true
+	} else if w.operation == "IS" {
+		w.value = value1
+		w.Solved = true
+	} else if w.operation == "LSHIFT" {
+		w.value = value1 << w.shift
+		w.Solved = true
+	} else if w.operation == "RSHIFT" {
+		w.value = value1 >> w.shift
+		w.Solved = true
+	} else if w.operation == "AND" {
+		w.value = value1 & valueForWire(w.ref2, wiring, caller)
+		w.Solved = true
+	} else if w.operation == "OR" {
+		w.value = value1 | valueForWire(w.ref2, wiring, caller)
+		w.Solved = true
+	}
+	fmt.Println(w.Name)
+	return w.value
 }
 
-func (w *Wiring) Get(name string) Wire {
-	return w.Wiring[name]
+func valueForWire(wireName string, wiring map[string]*Wire, caller string) (value uint16) {
+	number, err := strconv.Atoi(wireName)
+	if err != nil {
+		wire := wiring[wireName]
+		value = wire.GetUint(wiring, caller)
+	} else {
+		value = uint16(number)
+	}
+	return value
 }
 
 func main() {
@@ -62,45 +73,37 @@ func main() {
 		scannedStrings = append(scannedStrings, scanner.Text())
 	}
 
-	wiring := map[string]Wire{}
+	wiring := map[string]*Wire{}
 
 	WireMap(scannedStrings, wiring)
 
-	fmt.Println("The Value of a is: ", wiring["a"].GetUint(wiring))
+	wireA := wiring["a"]
+	fmt.Println("The Value of a is: ", wireA.GetUint(wiring, "main class"))
 }
 
-func WireMap(stringList []string, wiring map[string]Wire) {
+func WireMap(stringList []string, wiring map[string]*Wire) {
 	for _, line := range stringList {
 		wire := parseLine(line)
-		wiring[wire.Name] = wire
+		wiring[wire.Name] = &wire
 	}
 }
 
 func parseLine(line string) (node Wire) {
 	words := strings.Split(line, " ")
 	if len(words) == 3 {
-		if isStringNumber(words[0]) {
-			number, _ := strconv.Atoi(words[0])
-			return Wire{Solved: true, value: uint16(number), Name: words[2]}
+		number, err := strconv.Atoi(words[0])
+		if err == nil {
+			return Wire{value: uint16(number), operation: "IS", Name: words[2], Solved: true}
 		} else {
 			return Wire{ref1: words[0], operation: "IS", Name: words[2], Solved: false}
 		}
 	} else if len(words) == 4 && words[0] == "NOT" {
-		return Wire{ref1: words[1], operation: "NOT", Name: words[3], Solved: false}
+		return Wire{ref1: words[1], operation: words[0], Name: words[3], Solved: false}
 	} else if len(words) == 5 && (words[1] == "AND" || words[1] == "OR") {
-		return Wire{ref1: words[0], ref2: words[2], Name: words[4], Solved: false}
+		return Wire{ref1: words[0], ref2: words[2], operation: words[1], Name: words[4], Solved: false}
 	} else if len(words) == 5 && (words[1] == "LSHIFT" || words[1] == "RSHIFT") {
 		numb, _ := strconv.Atoi(words[2])
-		return Wire{ref1: words[0], shift: uint16(numb), Name: words[4], Solved: false}
+		return Wire{ref1: words[0], shift: uint16(numb), operation: words[1], Name: words[4], Solved: false}
 	}
 	panic("HELP")
-}
-
-func isStringNumber(word string) bool {
-	_, err := strconv.Atoi(word)
-	if err == nil {
-		return true
-	} else {
-		return false
-	}
 }

@@ -8,7 +8,7 @@ func TestWiring(t *testing.T) {
 
 	t.Run("Test", func(t *testing.T) {
 
-		wiring := map[string]Wire{}
+		wiring := map[string]*Wire{}
 
 		strings := []string{"123 -> x",
 			"x AND y -> d",
@@ -20,8 +20,9 @@ func TestWiring(t *testing.T) {
 			"NOT y -> i"}
 		WireMap(strings, wiring)
 
-		for key, _ := range wiring {
-			assertStuff(t, key, wiring[key].GetUint(wiring))
+		for key := range wiring {
+			wire := wiring[key]
+			assertStuff(t, key, wire.GetUint(wiring, "test"))
 		}
 	})
 }
