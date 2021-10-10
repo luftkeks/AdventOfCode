@@ -9,9 +9,9 @@ type Direction int64
 
 const (
 	Up    Direction = 0
-	Down            = 1
-	Right           = 2
-	Left            = 3
+	Down  Direction = 1
+	Right Direction = 2
+	Left  Direction = 3
 )
 
 type Point struct {
@@ -27,8 +27,7 @@ func main() {
 	dat, err := os.ReadFile(fileToRead)
 	check(err)
 
-	var wayToGo string
-	wayToGo = string(dat)
+	wayToGo := string(dat)
 
 	santaPostion := Point{x: 0, y: 0}
 
@@ -55,7 +54,7 @@ func main() {
 	roboSantaPostion2 := Point{x: 0, y: 0}
 
 	card2 := SantasMap{}
-	card.addPoint(santaPostion)
+	card2.addPoint(santaPostion2)
 
 	for number, char := range wayToGo {
 
