@@ -36,17 +36,17 @@ func main() {
 	}
 
 	placeSlice := []string{}
-	for place, _ := range places {
+	for place := range places {
 		placeSlice = append(placeSlice, place)
 	}
 
-	listPossibleRoutes := []PossibleRoute{}
+	//listPossibleRoutes := []PossibleRoute{}
 
 	shortestRoute := PossibleRoute{TotalDistance: int(^uint(0) >> 1)}
 	longestRoute := PossibleRoute{TotalDistance: 0}
 	for _, permutation := range permutations(placeSlice) {
 		route := PossibleRoute{Waypoints: permutation, TotalDistance: findTotalDistance(permutation)}
-		listPossibleRoutes = append(listPossibleRoutes, route)
+		//listPossibleRoutes = append(listPossibleRoutes, route)
 		if route.TotalDistance < shortestRoute.TotalDistance {
 			shortestRoute = route
 		}
