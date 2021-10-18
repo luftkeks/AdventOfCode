@@ -41,31 +41,32 @@ func main() {
 	ingridients := parseIngredients(scannedStrings)
 
 	bestScore := 0
-	bestIn1 := 0
-	bestIn2 := 0
-	bestIn3 := 0
-	bestIn4 := 0
 	for in1 := 0; in1 <= cookieCapacity; in1++ {
 		for in2 := 0; in2 <= cookieCapacity-in1; in2++ {
 			for in3 := 0; in3 <= cookieCapacity-in1-in2; in3++ {
-				//					in2 := 0
-				//	in3 := 0
 				in4 := cookieCapacity - in1 - in2 - in3
-				cookieScore := calculateCookie(ingridients, in1, in2, in3, in4)
+				cookieScore := calculateCookie(ingridients, in1, in2, in3, in4, false)
 				if cookieScore > bestScore {
 					bestScore = cookieScore
-					bestIn1 = in1
-					bestIn2 = in2
-					bestIn3 = in3
-					bestIn4 = in4
 				}
 			}
 		}
 	}
 
-	fmt.Printf("The best score is %v with in1:%v in2:%v in3:%v in4:%v!\n", bestScore, bestIn1, bestIn2, bestIn3, bestIn4)
-
-	fmt.Println(calculateCookie(ingridients, 44, 0, 0, 56))
+	fmt.Printf("The best score is %v !\n", bestScore)
+	bestScore = 0
+	for in1 := 0; in1 <= cookieCapacity; in1++ {
+		for in2 := 0; in2 <= cookieCapacity-in1; in2++ {
+			for in3 := 0; in3 <= cookieCapacity-in1-in2; in3++ {
+				in4 := cookieCapacity - in1 - in2 - in3
+				cookieScore := calculateCookie(ingridients, in1, in2, in3, in4, true)
+				if cookieScore > bestScore {
+					bestScore = cookieScore
+				}
+			}
+		}
+	}
+	fmt.Printf("The best score with 500 calories is %v !\n", bestScore)
 }
 
 func parseIngredients(lines []string) []Ingredient {
@@ -97,7 +98,7 @@ func parseIngredients(lines []string) []Ingredient {
 	return ingridients
 }
 
-func calculateCookie(indrigients []Ingredient, in1, in2, in3, in4 int) int {
+func calculateCookie(indrigients []Ingredient, in1, in2, in3, in4 int, caloriesLimit bool) int {
 	totalCapacity := indrigients[0].capacity*in1 + indrigients[1].capacity*in2 + indrigients[2].capacity*in3 + indrigients[3].capacity*in4
 	totalDurability := indrigients[0].durability*in1 + indrigients[1].durability*in2 + indrigients[2].durability*in3 + indrigients[3].durability*in4
 	totalFlavor := indrigients[0].flavor*in1 + indrigients[1].flavor*in2 + indrigients[2].flavor*in3 + indrigients[3].flavor*in4
@@ -115,7 +116,7 @@ func calculateCookie(indrigients []Ingredient, in1, in2, in3, in4 int) int {
 		totalTexture = 0
 	}
 	totalCalories := indrigients[0].calories*in1 + indrigients[1].calories*in2 + indrigients[2].calories*in3 + indrigients[3].calories*in4
-	if totalCalories != 500 {
+	if totalCalories != 500 && caloriesLimit {
 		return 0
 	}
 	return totalCapacity * totalDurability * totalFlavor * totalTexture
