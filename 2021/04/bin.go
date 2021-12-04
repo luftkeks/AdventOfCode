@@ -128,7 +128,7 @@ func (b *BingoField) String() string {
 	var result string
 	for _, line := range b.field {
 		for _, value := range line {
-			result += strconv.Itoa(value) + " "
+			result += strconv.Itoa(value) + "\t"
 		}
 		result += "\n"
 	}
