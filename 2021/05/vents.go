@@ -68,9 +68,6 @@ func main() {
 			if delta != int(math.Abs(float64(line.y2-line.y1))) {
 				panic("The Line is not diagonal")
 			}
-			if line.x1 > line.x2 {
-			} else {
-			}
 			if line.y2 > line.y1 {
 				for xx := 0; xx <= delta; xx++ {
 					if line.x1 > line.x2 {
