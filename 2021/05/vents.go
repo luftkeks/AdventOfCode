@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"strconv"
@@ -15,10 +14,15 @@ type line struct {
 	x1, y1, x2, y2 int
 }
 
-func main() {
+func elapsed() func() {
 	start := time.Now()
+	return func() { fmt.Printf("Day took %v\n", time.Since(start)) }
+}
+
+func main() {
+	defer elapsed()()
 	dat, _ := os.Open("input.txt")
-	defer func(dat *os.File) { dat.Close() }(dat)
+	defer dat.Close()
 	scanner := bufio.NewScanner(dat)
 	inputLines := []line{}
 	for scanner.Scan() {
@@ -110,8 +114,6 @@ func main() {
 		//fmt.Printf("\n")
 	}
 	fmt.Printf("The number of overlapping points for Part 2 is: %v\n", overlappingPoints2)
-	elapsed := time.Since(start)
-	log.Printf("This day took %s", elapsed)
 }
 
 func (l *line) findMaxValue() int {
