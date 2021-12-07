@@ -57,9 +57,7 @@ func main() {
 		totalFuel := 0
 		for height2, number := range numberOfSubs {
 			fuelDelta := Abs(height2 - jj)
-			for ii := fuelDelta; ii > 0; ii-- {
-				totalFuel += ii * number
-			}
+				totalFuel += fuelDelta * (fuelDelta+1) / 2 * number
 		}
 		if totalFuel < minFuel2 {
 			minFuel2 = totalFuel
