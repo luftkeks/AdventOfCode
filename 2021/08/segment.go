@@ -36,4 +36,17 @@ func main() {
 	}
 
 	fmt.Printf("The number of 1478 is %v.\n", counter)
+
+	for _, line := range lines {
+		inOut := strings.Split(line, "|")
+		digits := strings.Split(inOut[0], "|")
+		digitMap := map[int]rune{}
+		for _, digit := range digits {
+			if len(digit) == 2 {
+				for _, char := range digit {
+					digitMap[1] = char
+				}
+			}
+		}
+	}
 }
