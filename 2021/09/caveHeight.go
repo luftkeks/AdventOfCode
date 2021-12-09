@@ -9,11 +9,12 @@ import (
 
 type point struct {
 	xx, yy int
-	height rune
+	height int
 }
 
 type basin struct {
-	points []point
+	points    []point
+	lastPoint point
 }
 
 func elapsed() func() {
@@ -40,30 +41,32 @@ func main() {
 	for yy := 0; yy < len(lines); yy++ {
 		for xx := 0; xx < len(lines[yy]); xx++ {
 
-			dot := point{xx: xx, yy: yy, height: rune(lines[yy][xx])}
+			dot := point{xx: xx, yy: yy, height: int(lines[yy][xx]) - 0x30}
 
-			if dot.height < '9' {
+			if dot.height < 9 {
 				hasBasin := false
-				bas := -1
+				lastMatchingBasin := -1
 				for ii := 0; ii < len(basins); ii++ {
 					if hasBasin {
-						if isPointAdjectedToBasin(dot, basins[ii]) {
-							basins[ii].points = append(basins[ii].points, basins[bas].points...)
-							basins[bas].points = []point{}
+						if basins[ii].isPointAdjectedToBasin(dot) {
+							basins[ii].points = append(basins[ii].points, basins[lastMatchingBasin].points...)
+							basins[lastMatchingBasin].points = []point{}
+							lastMatchingBasin = ii
 						}
 						continue
 					}
 
-					isInBasin := isPointAdjectedToBasin(dot, basins[ii])
+					isInBasin := basins[ii].isPointAdjectedToBasin(dot)
 					if isInBasin {
-						basins[ii].points = append(basins[ii].points, dot)
-						bas = ii
+						basins[ii].addPoint(dot)
+						lastMatchingBasin = ii
 					}
 					hasBasin = isInBasin
 				}
 				if !hasBasin {
-					dots := []point{dot}
-					basins = append(basins, basin{points: dots})
+					newBasin := basin{}
+					newBasin.addPoint(dot)
+					basins = append(basins, newBasin)
 				}
 			}
 
@@ -86,7 +89,7 @@ func main() {
 
 	riskLevel := uint(0)
 	for _, pointt := range lowestPoints {
-		riskLevel += uint(pointt.height) - uint('0') + 1
+		riskLevel += uint(pointt.height) + 1
 	}
 
 	fmt.Printf("The risk level of the lowest points in the map is: %v\n", riskLevel)
@@ -95,22 +98,13 @@ func main() {
 	indexSmallest := 0
 	for _, bas := range basins {
 		lang := len(bas.points)
-		if lang > biggest[indexSmallest] {
+		if lang >= biggest[indexSmallest] {
 			biggest[indexSmallest] = lang
-			indexSmallest = getSmallestIndest(biggest)
+			indexSmallest = getSmallestIndex(biggest)
 		}
 	}
 
 	fmt.Printf("The 3 biggest basins multiplied by their length are: %v\n", biggest[0]*biggest[1]*biggest[2])
-}
-
-func (b *basin) checkPoint(dot point) bool {
-	for _, thing := range b.points {
-		if isPointAdjected(thing, dot) {
-			return true
-		}
-	}
-	return false
 }
 
 func numberNotOverEdge(maap []string, yy, xx int) bool {
@@ -122,15 +116,6 @@ func numberNotOverEdge(maap []string, yy, xx int) bool {
 		return false
 	}
 	return true
-}
-
-func isPointInSlice(list []point, dot point) bool {
-	for _, element := range list {
-		if element == dot {
-			return true
-		}
-	}
-	return false
 }
 
 func isPointAdjected(point1, point2 point) bool {
@@ -148,21 +133,30 @@ func Abs(x int) int {
 	return x
 }
 
-func isPointAdjectedToBasin(dot point, bas basin) bool {
-	for _, basinDot := range bas.points {
-		if isPointAdjected(dot, basinDot) {
+func (b *basin) isPointAdjectedToBasin(dot point) bool {
+	if isPointAdjected(dot, b.lastPoint) {
+		return true
+	}
+	for ii := 0; ii < len(b.points); ii++ {
+		if isPointAdjected(dot, b.points[ii]) {
 			return true
 		}
 	}
 	return false
 }
 
-func getSmallestIndest(in []int) int {
+func (b *basin) addPoint(dot point) {
+	b.lastPoint = dot
+	b.points = append(b.points, dot)
+}
+
+func getSmallestIndex(in []int) int {
 	indexSmallest := 0
-	smallest := 999999999
+	smallest := 9999
 	for index, value := range in {
 		if value < smallest {
 			indexSmallest = index
+			smallest = value
 		}
 	}
 	return indexSmallest
