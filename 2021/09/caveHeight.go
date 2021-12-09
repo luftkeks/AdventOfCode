@@ -4,13 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"sort"
-	"strconv"
 	"time"
 )
 
 type point struct {
-	xx, yy, height int
+	xx, yy int
+	height rune
 }
 
 type basin struct {
@@ -36,26 +35,14 @@ func main() {
 		lines = append(lines, inString)
 	}
 
-	heightMap := make([][]int, len(lines))
-	for index := range heightMap {
-		heightMap[index] = make([]int, len(lines[index]))
-		for indexLine, char := range lines[index] {
-			number, err := strconv.Atoi(string(char))
-			if err != nil {
-				panic("Something doesnt work with the number conversion of " + string(char))
-			}
-			heightMap[index][indexLine] = number
-		}
-	}
-
 	lowestPoints := []point{}
 	basins := []basin{}
-	for yy := 0; yy < len(heightMap); yy++ {
-		for xx := 0; xx < len(heightMap[yy]); xx++ {
+	for yy := 0; yy < len(lines); yy++ {
+		for xx := 0; xx < len(lines[yy]); xx++ {
 
-			dot := point{xx: xx, yy: yy, height: heightMap[yy][xx]}
+			dot := point{xx: xx, yy: yy, height: rune(lines[yy][xx])}
 
-			if dot.height < 9 {
+			if dot.height < '9' {
 				hasBasin := false
 				bas := -1
 				for ii := 0; ii < len(basins); ii++ {
@@ -80,16 +67,16 @@ func main() {
 				}
 			}
 
-			if numberNotOverEdge(heightMap, yy, xx-1) && heightMap[yy][xx-1] <= heightMap[yy][xx] {
+			if numberNotOverEdge(lines, yy, xx-1) && lines[yy][xx-1] <= lines[yy][xx] {
 				continue
 			}
-			if numberNotOverEdge(heightMap, yy, xx+1) && heightMap[yy][xx+1] <= heightMap[yy][xx] {
+			if numberNotOverEdge(lines, yy, xx+1) && lines[yy][xx+1] <= lines[yy][xx] {
 				continue
 			}
-			if numberNotOverEdge(heightMap, yy+1, xx) && heightMap[yy+1][xx] <= heightMap[yy][xx] {
+			if numberNotOverEdge(lines, yy+1, xx) && lines[yy+1][xx] <= lines[yy][xx] {
 				continue
 			}
-			if numberNotOverEdge(heightMap, yy-1, xx) && heightMap[yy-1][xx] <= heightMap[yy][xx] {
+			if numberNotOverEdge(lines, yy-1, xx) && lines[yy-1][xx] <= lines[yy][xx] {
 				continue
 			}
 
@@ -97,16 +84,24 @@ func main() {
 		}
 	}
 
-	riskLevel := 0
+	riskLevel := uint(0)
 	for _, pointt := range lowestPoints {
-		riskLevel += pointt.height + 1
+		riskLevel += uint(pointt.height) - uint('0') + 1
 	}
 
 	fmt.Printf("The risk level of the lowest points in the map is: %v\n", riskLevel)
 
-	sort.SliceStable(basins, func(i, j int) bool { return len(basins[i].points) > len(basins[j].points) })
+	biggest := make([]int, 3)
+	indexSmallest := 0
+	for _, bas := range basins {
+		lang := len(bas.points)
+		if lang > biggest[indexSmallest] {
+			biggest[indexSmallest] = lang
+			indexSmallest = getSmallestIndest(biggest)
+		}
+	}
 
-	fmt.Printf("The 3 biggest basins multiplied by their length are: %v\n", len(basins[0].points)*len(basins[1].points)*len(basins[2].points))
+	fmt.Printf("The 3 biggest basins multiplied by their length are: %v\n", biggest[0]*biggest[1]*biggest[2])
 }
 
 func (b *basin) checkPoint(dot point) bool {
@@ -118,7 +113,7 @@ func (b *basin) checkPoint(dot point) bool {
 	return false
 }
 
-func numberNotOverEdge(maap [][]int, yy, xx int) bool {
+func numberNotOverEdge(maap []string, yy, xx int) bool {
 	yBorder := len(maap)
 	xBorder := len(maap[0])
 	if !(xx >= 0 && xx < xBorder) {
@@ -160,4 +155,15 @@ func isPointAdjectedToBasin(dot point, bas basin) bool {
 		}
 	}
 	return false
+}
+
+func getSmallestIndest(in []int) int {
+	indexSmallest := 0
+	smallest := 999999999
+	for index, value := range in {
+		if value < smallest {
+			indexSmallest = index
+		}
+	}
+	return indexSmallest
 }
