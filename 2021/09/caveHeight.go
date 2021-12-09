@@ -24,7 +24,7 @@ func elapsed() func() {
 
 func main() {
 	defer elapsed()()
-	dat, err := os.Open("test.txt")
+	dat, err := os.Open("input.txt")
 	if err != nil {
 		panic("Hilfe File tut nicht")
 	}
@@ -62,6 +62,7 @@ func main() {
 					if hasBasin {
 						if isPointAdjectedToBasin(dot, basins[ii]) {
 							basins[ii].points = append(basins[ii].points, basins[bas].points...)
+							basins[bas].points = []point{}
 						}
 						continue
 					}
@@ -103,23 +104,9 @@ func main() {
 
 	fmt.Printf("The risk level of the lowest points in the map is: %v\n", riskLevel)
 
-	// cleanup Basins
-	resultBasins := []basin{}
-	for _, bas := range basins {
-		isInResult := false
-		for _, resBas := range resultBasins {
-			if resBas.checkPoint(bas.points[0]) {
-				isInResult = true
-			}
-		}
-		if !isInResult {
-			resultBasins = append(resultBasins, bas)
-		}
-	}
+	sort.SliceStable(basins, func(i, j int) bool { return len(basins[i].points) > len(basins[j].points) })
 
-	sort.SliceStable(resultBasins, func(i, j int) bool { return len(resultBasins[i].points) > len(resultBasins[j].points) })
-
-	fmt.Println(resultBasins)
+	fmt.Printf("The 3 biggest basins multiplied by their length are: %v\n", len(basins[0].points)*len(basins[1].points)*len(basins[2].points))
 }
 
 func (b *basin) checkPoint(dot point) bool {
