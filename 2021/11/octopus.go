@@ -104,13 +104,3 @@ func numberNotOverEdge(maap [][]int, yy, xx int) bool {
 	}
 	return true
 }
-
-func print(maap [][]int) {
-	for _, row := range maap {
-		for _, number := range row {
-			fmt.Printf("%v", number)
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n\n")
-}
