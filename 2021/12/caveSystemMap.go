@@ -37,13 +37,13 @@ func Part(nodes map[string]*Node) (out1, out2 int) {
 
 	counter1 := count32(0)
 	counter2 := count32(0)
-	findWay(nodes, Way{startNode}, 20, &counter1, &counter2, &wait)
+	findWay(nodes, Way{startNode}, &counter1, &counter2, &wait)
 
 	wait.Wait()
 	return int(counter1.get()), int(counter2.get())
 }
 
-func findWay(nodes map[string]*Node, way Way, depth int, count1 *count32, count2 *count32, wait *sync.WaitGroup) {
+func findWay(nodes map[string]*Node, way Way, count1 *count32, count2 *count32, wait *sync.WaitGroup) {
 	node := way[0]
 	if node.name == "end" && way.isValid(true) {
 		if way.isValid(false) {
@@ -52,7 +52,7 @@ func findWay(nodes map[string]*Node, way Way, depth int, count1 *count32, count2
 		count2.inc()
 		wait.Done()
 		return
-	} else if depth < 0 || !way.isValid(true) {
+	} else if !way.isValid(true) {
 		wait.Done()
 		return
 	}
@@ -60,7 +60,7 @@ func findWay(nodes map[string]*Node, way Way, depth int, count1 *count32, count2
 	wait.Add(len(node.edges) - 1)
 	for newNode := range node.edges {
 		newWay := append(Way{nodes[newNode]}, way...)
-		go findWay(nodes, newWay, depth-1, count1, count2, wait)
+		go findWay(nodes, newWay, count1, count2, wait)
 	}
 }
 
