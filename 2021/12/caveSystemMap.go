@@ -5,103 +5,73 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
-func elapsed() func() {
-	start := time.Now()
-	return func() { fmt.Printf("Day took %v\n", time.Since(start)) }
+type count32 int32
+type Node struct {
+	name  string
+	edges map[string]bool
 }
+
+type Way []*Node
 
 func main() {
 	defer elapsed()()
 
 	nodes := loadNodes("input.txt")
-	fmt.Printf("The Number of valid Paths for Part 1 is: %v\n", Part1(nodes))
-	fmt.Printf("The Number of valid Paths for Part 1 is: %v\n", Part2(nodes))
+	part1, part2 := Part(nodes)
+	fmt.Printf("The Number of valid Paths for Part 1 is: %v\n", part1)
+	fmt.Printf("The Number of valid Paths for Part 1 is: %v\n", part2)
 
 }
 
-func Part1(nodes map[string]*Node) (out int) {
+func Part(nodes map[string]*Node) (out1, out2 int) {
 
 	startNode := nodes["start"]
 
-	ways := findWay(startNode, nodes, Way{startNode}, 20, false)
+	wait := sync.WaitGroup{}
+	wait.Add(1)
 
-	counter := 0
-	for _, way := range ways {
-		if way.isValid1() && way.hasEnded() {
-			counter++
-		}
-	}
-	return counter
+	counter1 := count32(0)
+	counter2 := count32(0)
+	findWay(nodes, Way{startNode}, 20, &counter1, &counter2, &wait)
+
+	wait.Wait()
+	return int(counter1.get()), int(counter2.get())
 }
 
-func Part2(nodes map[string]*Node) (out int) {
-
-	startNode := nodes["start"]
-
-	ways := findWay(startNode, nodes, Way{startNode}, 20, true)
-
-	counter := 0
-	for _, way := range ways {
-		if way.isValid2() && way.hasEnded() {
-			counter++
+func findWay(nodes map[string]*Node, way Way, depth int, count1 *count32, count2 *count32, wait *sync.WaitGroup) {
+	node := way[0]
+	if node.name == "end" && way.isValid(true) {
+		if way.isValid(false) {
+			count1.inc()
 		}
-	}
-	return counter
-}
-
-type Node struct {
-	name   string
-	edgeds map[string]bool
-}
-
-type Way []*Node
-
-func findWay(node *Node, nodes map[string]*Node, way Way, depth int, isPart2 bool) []Way {
-	if depth < 0 {
-		return []Way{}
-	}
-	if node.name == "end" {
-		return []Way{Way{node}}
+		count2.inc()
+		wait.Done()
+		return
+	} else if depth < 0 || !way.isValid(true) {
+		wait.Done()
+		return
 	}
 
-	returnWays := []Way{}
-	for newNode := range node.edgeds {
-		nNode := nodes[newNode]
-		newWay := append(way, nNode)
-		if (!isPart2 && newWay.isValid1()) || (isPart2 && newWay.isValid2()) {
-			ways := findWay(nNode, nodes, newWay, depth-1, isPart2)
-			returnWays = append(returnWays, ways...)
-		}
+	wait.Add(len(node.edges) - 1)
+	for newNode := range node.edges {
+		newWay := append(Way{nodes[newNode]}, way...)
+		go findWay(nodes, newWay, depth-1, count1, count2, wait)
 	}
-	for ii := 0; ii < len(returnWays); ii++ {
-		returnWays[ii] = append(returnWays[ii], node)
-	}
-	return returnWays
 }
 
 func (n *Node) addEdge(in string) {
-	if n.edgeds == nil {
-		n.edgeds = make(map[string]bool)
+	if n.edges == nil {
+		n.edges = make(map[string]bool)
 	}
-	n.edgeds[in] = true
+	n.edges[in] = true
 }
 
-func (n *Node) String() string {
-	return fmt.Sprintf("[%v:%v]", n.name, n.edgeds)
-}
-
-func (w *Way) String() string {
-	result := ""
-	for ii := len(*w) - 1; ii >= 0; ii-- {
-		result = result + " " + (*w)[ii].name
-	}
-	return result
-}
-
-func (w *Way) isValid1() bool {
+func (w *Way) isValid(isPartTwo bool) bool {
 	nodeNumberMap := make(map[string]int)
 
 	for ii := 0; ii < len(*w); ii++ {
@@ -109,24 +79,8 @@ func (w *Way) isValid1() bool {
 	}
 
 	for kk, vv := range nodeNumberMap {
-		if rune(kk[0]) > 'a' && vv > 1 {
-			return false
-		}
-	}
-	return true
-}
-
-func (w *Way) isValid2() bool {
-	nodeNumberMap := make(map[string]int)
-
-	for ii := 0; ii < len(*w); ii++ {
-		nodeNumberMap[(*w)[ii].name]++
-	}
-
-	once := true
-	for kk, vv := range nodeNumberMap {
-		if kk != "start" && rune(kk[0]) >= 'a' && vv == 2 && once {
-			once = false
+		if isPartTwo && kk != "start" && rune(kk[0]) >= 'a' && vv == 2 {
+			isPartTwo = false
 			continue
 		}
 		if rune(kk[0]) >= 'a' && vv > 1 {
@@ -134,14 +88,6 @@ func (w *Way) isValid2() bool {
 		}
 	}
 	return true
-}
-
-func (w *Way) hasEnded() bool {
-	if (*w)[0].name == "end" {
-		return true
-	} else {
-		return false
-	}
 }
 
 func loadNodes(inputFile string) map[string]*Node {
@@ -176,4 +122,17 @@ func loadNodes(inputFile string) map[string]*Node {
 		nodes[node01[1]] = &node2
 	}
 	return nodes
+}
+
+func (c *count32) inc() int32 {
+	return atomic.AddInt32((*int32)(c), 1)
+}
+
+func (c *count32) get() int32 {
+	return atomic.LoadInt32((*int32)(c))
+}
+
+func elapsed() func() {
+	start := time.Now()
+	return func() { fmt.Printf("Day took %v\n", time.Since(start)) }
 }

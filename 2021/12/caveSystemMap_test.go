@@ -8,44 +8,37 @@ func TestDoStuff(t *testing.T) {
 	t.Run("First File", func(t *testing.T) {
 		test := loadNodes("test1.txt")
 
-		answer := Part1(test)
+		answer1, answer2 := Part(test)
 
-		assertInt(t, answer, 10)
+		assertInt(t, answer1, 10)
+		assertInt(t, answer2, 36)
 	})
 	t.Run("Second File", func(t *testing.T) {
 		test := loadNodes("test2.txt")
 
-		answer := Part1(test)
+		answer1, answer2 := Part(test)
 
-		assertInt(t, answer, 19)
+		assertInt(t, answer1, 19)
+		assertInt(t, answer2, 103)
 	})
 	t.Run("Third File", func(t *testing.T) {
 		test := loadNodes("test3.txt")
 
-		answer := Part1(test)
+		answer1, answer2 := Part(test)
 
-		assertInt(t, answer, 226)
+		assertInt(t, answer1, 226)
+		assertInt(t, answer2, 3509)
 	})
-	t.Run("First File Part 2", func(t *testing.T) {
-		test := loadNodes("test1.txt")
+}
 
-		answer := Part2(test)
+func Benchmark_solution(t *testing.B) {
+	test := loadNodes("input.txt")
 
-		assertInt(t, answer, 36)
-	})
-	t.Run("Second File Part 2", func(t *testing.T) {
-		test := loadNodes("test2.txt")
+	t.Run("Input", func(t *testing.B) {
+		solution1, solution2 := Part(test)
 
-		answer := Part2(test)
-
-		assertInt(t, answer, 103)
-	})
-	t.Run("Third File Part 2", func(t *testing.T) {
-		test := loadNodes("test3.txt")
-
-		answer := Part2(test)
-
-		assertInt(t, answer, 3509)
+		assertInt(t, solution1, 4378)
+		assertInt(t, solution2, 133621)
 	})
 }
 
