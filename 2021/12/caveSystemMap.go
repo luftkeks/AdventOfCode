@@ -22,7 +22,9 @@ func main() {
 	defer elapsed()()
 
 	nodes := loadNodes("input.txt")
-	part1, part2 := Part(nodes)
+
+	part1, part2 := 0, 0
+	part1, part2 = Part(nodes)
 	fmt.Printf("The Number of valid Paths for Part 1 is: %v\n", part1)
 	fmt.Printf("The Number of valid Paths for Part 1 is: %v\n", part2)
 
