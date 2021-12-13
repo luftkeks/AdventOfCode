@@ -16,6 +16,10 @@ func main() {
 	fmt.Printf("The Answer to Part one is: %v\n", dots)
 
 	points := parseWithFoldings("input.txt", 100)
+	printPoints(points)
+}
+
+func printPoints(points []Point) {
 	xMax, yMax := Max(points)
 	lines := make([][]rune, yMax+1)
 	for ii := 0; ii < len(lines); ii++ {
@@ -32,6 +36,7 @@ func main() {
 	for _, line := range lines {
 		str = append(str, string(line)+"\n")
 	}
+	fmt.Println("The Answer to Part Two is:")
 	fmt.Println(str)
 }
 
@@ -42,7 +47,7 @@ func parseWithFoldings(input string, folding int) []Point {
 	}
 	defer dat.Close()
 	scanner := bufio.NewScanner(dat)
-	points := []Point{}
+	points := map[Point]bool{}
 	foldings := []Folding{}
 	for scanner.Scan() {
 		inString := scanner.Text()
@@ -50,7 +55,7 @@ func parseWithFoldings(input string, folding int) []Point {
 		if len(split) == 2 {
 			xx, _ := strconv.Atoi(split[0])
 			yy, _ := strconv.Atoi(split[1])
-			points = append(points, Point{x: xx, y: yy})
+			points[Point{x: xx, y: yy}] = true
 		} else if len(inString) < 5 {
 			continue
 		} else {
@@ -63,36 +68,36 @@ func parseWithFoldings(input string, folding int) []Point {
 	for ii := 0; ii < folding && ii < len(foldings); ii++ {
 		points = fold(points, foldings[ii])
 	}
-	return points
+	pointStruct := []Point{}
+	for key := range points {
+		pointStruct = append(pointStruct, key)
+	}
+	return pointStruct
 }
 
-func fold(points []Point, fold Folding) []Point {
-	pointSet := map[Point]bool{}
+func fold(points map[Point]bool, fold Folding) map[Point]bool {
+	newPoints := map[Point]bool{}
 	if fold.direction == "y" {
-		for _, dot := range points {
+		for dot := range points {
 			if dot.y < fold.line {
-				pointSet[dot] = true
+				newPoints[dot] = true
 			} else {
 				dotNew := Point{y: 2*fold.line - dot.y, x: dot.x}
-				pointSet[dotNew] = true
+				newPoints[dotNew] = true
 			}
 		}
 	} else if fold.direction == "x" {
-		for _, dot := range points {
+		for dot := range points {
 			if dot.x < fold.line {
-				pointSet[dot] = true
+				newPoints[dot] = true
 			} else {
 				dotNew := Point{y: dot.y, x: 2*fold.line - dot.x}
-				pointSet[dotNew] = true
+				newPoints[dotNew] = true
 			}
 		}
 	}
 
-	points = []Point{}
-	for key := range pointSet {
-		points = append(points, key)
-	}
-	return points
+	return newPoints
 }
 
 type Folding struct {
