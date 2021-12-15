@@ -63,7 +63,6 @@ func main() {
 	start2 := maap2[0][0]
 	goal2 := maap2[len(maap2)-1][len(maap2[0])-1]
 	path2 := aStarAlgorithm(start2, goal2)
-	fmt.Println(goal2.cost)
 	totalCosts2 := 0
 	for _, elem := range path2 {
 		totalCosts2 += elem.cost
