@@ -60,7 +60,7 @@ func (e *Element) PathEstimatedCost(to astar.Pather) float64 {
 
 func main() {
 	defer elapsed()()
-	dat, err := os.Open("test.txt")
+	dat, err := os.Open("input.txt")
 	if err != nil {
 		panic("Hilfe File tut nicht")
 	}
@@ -82,10 +82,6 @@ func main() {
 
 	start := Element{x: 0, y: 0, maap: &maap}
 	goal := Element{x: len(maap[0]) - 1, y: len(maap) - 1, maap: &maap}
-	for _, elem := range start.PathNeighbors() {
-		fmt.Println(elem.PathNeighborCost(&start))
-	}
-
 	fmt.Println(goal.PathNeighbors())
 	path, zwei, ok := astar.Path(&start, &goal)
 
