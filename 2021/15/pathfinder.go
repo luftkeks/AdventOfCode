@@ -16,7 +16,8 @@ func elapsed() func() {
 
 type Element struct {
 	x, y int
-	maap *[][]int
+	cost int
+	maap *[][]Element
 }
 
 func (e *Element) PathNeighbors() []astar.Pather {
@@ -26,7 +27,7 @@ func (e *Element) PathNeighbors() []astar.Pather {
 	for _, yy := range []int{e.y + 1, e.y, e.y - 1} {
 		for _, xx := range []int{e.x + 1, e.x, e.x - 1} {
 			if numberNotOverEdge(*e.maap, yy, xx) && notDiagonal(e.x, e.y, xx, yy) {
-				neighbors = append(neighbors, &Element{x: xx, y: yy, maap: e.maap})
+				neighbors = append(neighbors, &(*(*e).maap)[yy][xx])
 			}
 		}
 	}
@@ -36,7 +37,7 @@ func (e *Element) PathNeighbors() []astar.Pather {
 // PathNeighborCost calculates the exact movement cost to neighbor nodes.
 func (e *Element) PathNeighborCost(to astar.Pather) float64 {
 	toE := to.(*Element)
-	return float64((*(*e).maap)[toE.y][toE.x])
+	return float64((*(*e).maap)[toE.y][toE.x].cost)
 }
 
 // PathEstimatedCost is a heuristic method for estimating movement costs
@@ -71,17 +72,20 @@ func main() {
 		lines = append(lines, inString)
 	}
 
-	maap := make([][]int, len(lines))
+	maap := make([][]Element, len(lines))
 	for in, line := range lines {
-		maap[in] = make([]int, len(line))
+		maap[in] = make([]Element, len(line))
 		for in2, run := range line {
-			maap[in][in2] = int(run - '0')
+			maap[in][in2] = Element{x: in2, y: in, cost: int(run - '0'), maap: &maap}
 		}
 	}
 
 	start := Element{x: 0, y: 0, maap: &maap}
 	goal := Element{x: len(maap[0]) - 1, y: len(maap) - 1, maap: &maap}
-	fmt.Println(start.PathNeighbors())
+	for _, elem := range start.PathNeighbors() {
+		fmt.Println(elem.PathNeighborCost(&start))
+	}
+
 	fmt.Println(goal.PathNeighbors())
 	path, zwei, ok := astar.Path(&start, &goal)
 
@@ -95,10 +99,10 @@ func main() {
 		element := elem.(*Element)
 		totalCosts += element.getCosts()
 	}
-	fmt.Printf("The total cost minus the start element are: %v\n", totalCosts-maap[0][0])
+	fmt.Printf("The total cost minus the start element are: %v\n", totalCosts-maap[0][0].cost)
 }
 
-func numberNotOverEdge(maap [][]int, yy, xx int) bool {
+func numberNotOverEdge(maap [][]Element, yy, xx int) bool {
 	yBorder := len(maap)
 	xBorder := len(maap[0])
 	if !(xx >= 0 && xx < xBorder) {
@@ -125,5 +129,5 @@ func (e *Element) String() string {
 }
 
 func (e *Element) getCosts() int {
-	return (*(*e).maap)[e.y][e.x]
+	return e.cost
 }
