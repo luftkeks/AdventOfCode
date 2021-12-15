@@ -59,7 +59,7 @@ func (e *Element) PathEstimatedCost(to astar.Pather) float64 {
 
 func main() {
 	defer elapsed()()
-	dat, err := os.Open("input.txt")
+	dat, err := os.Open("test.txt")
 	if err != nil {
 		panic("Hilfe File tut nicht")
 	}
@@ -80,8 +80,9 @@ func main() {
 	}
 
 	start := Element{x: 0, y: 0, maap: &maap}
-	goal := Element{x: len(maap[0]), y: len(maap), maap: &maap}
+	goal := Element{x: len(maap[0]) - 1, y: len(maap) - 1, maap: &maap}
 	fmt.Println(start.PathNeighbors())
+	fmt.Println(goal.PathNeighbors())
 	path, zwei, ok := astar.Path(&start, &goal)
 
 	if !ok {
@@ -94,7 +95,7 @@ func main() {
 		element := elem.(*Element)
 		totalCosts += element.getCosts()
 	}
-	fmt.Println(totalCosts)
+	fmt.Printf("The total cost minus the start element are: %v\n", totalCosts-maap[0][0])
 }
 
 func numberNotOverEdge(maap [][]int, yy, xx int) bool {
