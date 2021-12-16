@@ -30,6 +30,7 @@ type Paket interface {
 	getVersion() int
 	getVersionSum() int
 	getLiteralSum() int
+	getCalculation() int
 }
 
 func main() {
@@ -50,10 +51,9 @@ func main() {
 		}
 		ints = ints + fmt.Sprintf("%04b", inInt)
 	}
-	pack, lastBit := stringToPaket(ints)
-	fmt.Println(lastBit)
-	fmt.Println(pack.getLiteralSum())
+	pack, _ := stringToPaket(ints)
 	fmt.Printf("The Version Sum of all is: %v\n", pack.getVersionSum())
+	fmt.Printf("The Result of the calculation is: %v\n", pack.getCalculation())
 }
 
 func stringToPaket(input string) (Paket, string) {
@@ -150,9 +150,66 @@ func (o *Operator) getLiteralSum() int {
 	return result
 }
 
+func (l *Literal) getCalculation() int {
+	return l.number
+}
+
+func (o *Operator) getCalculation() int {
+	result := 0
+	switch o.id {
+	case 0:
+		for _, pack := range o.content {
+			result += pack.getCalculation()
+		}
+	case 1:
+		result = 1
+		for _, pack := range o.content {
+			result *= pack.getCalculation()
+		}
+	case 2:
+		min := int(^uint(0) >> 1)
+		for _, pack := range o.content {
+			if pack.getCalculation() < min {
+				min = pack.getCalculation()
+			}
+		}
+		result = min
+	case 3:
+		max := 0
+		for _, pack := range o.content {
+			if pack.getCalculation() > max {
+				max = pack.getCalculation()
+			}
+		}
+		result = max
+	case 5:
+		if o.content[0].getCalculation() > o.content[1].getCalculation() {
+			result = 1
+		} else {
+			result = 0
+		}
+	case 6:
+		if o.content[0].getCalculation() < o.content[1].getCalculation() {
+			result = 1
+		} else {
+			result = 0
+		}
+	case 7:
+		if o.content[0].getCalculation() == o.content[1].getCalculation() {
+			result = 1
+		} else {
+			result = 0
+		}
+	default:
+		panic("Uff")
+	}
+	return result
+}
+
 func (l *Literal) String() string {
 	return fmt.Sprintf("%v %v", l.version, l.id)
 }
+
 func (o *Operator) String() string {
 	return fmt.Sprintf("%v %v", o.version, o.id)
 }
