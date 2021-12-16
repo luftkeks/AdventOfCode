@@ -51,42 +51,38 @@ func main() {
 		}
 		ints = ints + fmt.Sprintf("%04b", inInt)
 	}
-	pack, _ := stringToPaket(ints)
+	pack, _ := stringToPaket([]rune(ints))
 	fmt.Printf("The Version Sum of all is: %v\n", pack.getVersionSum())
 	fmt.Printf("The Result of the calculation is: %v\n", pack.getCalculation())
 }
 
-func stringToPaket(input string) (Paket, string) {
+func stringToPaket(input []rune) (Paket, []rune) {
 	version, _ := strconv.ParseInt(string(input[0:3]), 2, 8)
 	id, _ := strconv.ParseInt(string(input[3:6]), 2, 8)
 	var result Paket
-	subString := string(input[7:])
+	subString := input[7:]
 	if id == 4 { //Literal
-		content := ""
+		content := []rune{}
 		for ii := 0; true; ii++ {
 			startNextPaket := 11 + ii*5
 			if len(input) > startNextPaket {
-				subString = string(input[startNextPaket:])
+				subString = input[startNextPaket:]
 			} else {
-				subString = ""
+				subString = []rune{}
 			}
-			if input[6+ii*5] == '1' {
-				con := string(input[7+ii*5 : 11+ii*5])
-				content += con
-			} else {
-				con := string(input[7+ii*5 : 11+ii*5])
-				content += con
+			content = append(content, input[7+ii*5:11+ii*5]...)
+			if input[6+ii*5] != '1' {
 				break
 			}
 		}
-		contentInt, _ := strconv.ParseInt(content, 2, 64)
+		contentInt, _ := strconv.ParseInt(string(content), 2, 64)
 		result = &Literal{version: int(version), id: int(id), number: int(contentInt)}
 	} else { //Operator
 		if input[6] == '1' {
 			numberOfSubPackages, _ := strconv.ParseInt(string(input[7:18]), 2, 64)
 			number := int(numberOfSubPackages)
 			subPakets := []Paket{}
-			subString = string(input[18:])
+			subString = input[18:]
 			var subPack Paket
 			for ii := 0; ii < number; ii++ {
 				subPack, subString = stringToPaket(subString)
@@ -97,13 +93,13 @@ func stringToPaket(input string) (Paket, string) {
 			lengthOfSubPackages, _ := strconv.ParseInt(string(input[7:22]), 2, 64)
 			length := int(lengthOfSubPackages)
 			subPackages := []Paket{}
-			subString2 := string(input[22 : 22+length])
+			subString2 := input[22 : 22+length]
 			var subPack Paket
 			for len(subString2) > 0 {
 				subPack, subString2 = stringToPaket(subString2)
 				subPackages = append(subPackages, subPack)
 			}
-			subString = string(input[22+length:])
+			subString = input[22+length:]
 			result = &Operator{version: int(version), id: int(id), content: subPackages}
 		}
 	}
