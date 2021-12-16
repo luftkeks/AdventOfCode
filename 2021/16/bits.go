@@ -29,7 +29,6 @@ type Paket interface {
 	getID() int
 	getVersion() int
 	getVersionSum() int
-	getLiteralSum() int
 	getCalculation() int
 }
 
@@ -130,18 +129,6 @@ func (o *Operator) getVersionSum() int {
 	result := o.version
 	for _, pack := range o.content {
 		result += pack.getVersionSum()
-	}
-	return result
-}
-
-func (l *Literal) getLiteralSum() int {
-	return l.number
-}
-
-func (o *Operator) getLiteralSum() int {
-	result := 0
-	for _, pack := range o.content {
-		result += pack.getLiteralSum()
 	}
 	return result
 }
