@@ -45,7 +45,6 @@ func main() {
 	ySplit := strings.Split(inStuff[3], "..")
 	targetStartY, _ = strconv.Atoi(ySplit[0][2:])
 	targetFinishY, _ = strconv.Atoi(ySplit[1])
-	fmt.Println(targetStartX, targetFinishX, targetStartY, targetFinishY)
 
 	throws := []*Throw{}
 	wait := sync.WaitGroup{}
