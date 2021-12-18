@@ -11,12 +11,45 @@ import (
 func main() {
 	defer elapsed()()
 
-	pair := parseInput("slightlyLargerExample.txt")
+	filename := "input.txt"
+	pair := parseInputOne(filename)
 
 	fmt.Println(pair)
+	fmt.Printf("The magnitude of the result is: %v\n", pair.calcMagnitude())
+
+	fmt.Printf("The max Magnitude of two Lines is %v\n", secondPart(filename))
 }
 
-func parseInput(input string) Pair {
+func secondPart(input string) int {
+	dat, err := os.Open(input)
+	if err != nil {
+		panic("Hilfe File tut nicht")
+	}
+	defer dat.Close()
+	scanner := bufio.NewScanner(dat)
+	lines := []string{}
+	for scanner.Scan() {
+		inString := scanner.Text()
+		lines = append(lines, inString)
+	}
+
+	maxMagnitude := 0
+	for ii := 0; ii < len(lines); ii++ {
+		for jj := 0; jj < len(lines); jj++ {
+			if ii != jj {
+				p1, _ := createDoppel([]rune(lines[ii]), 0)
+				p2, _ := createDoppel([]rune(lines[jj]), 0)
+				mag := reductDoppel(&Doppel{pair1: p1, pair2: p2}).calcMagnitude()
+				if mag > maxMagnitude {
+					maxMagnitude = mag
+				}
+			}
+		}
+	}
+	return maxMagnitude
+}
+
+func parseInputOne(input string) Pair {
 	dat, err := os.Open(input)
 	if err != nil {
 		panic("Hilfe File tut nicht")
@@ -40,7 +73,6 @@ func parseInput(input string) Pair {
 func reductDoppel(pair Pair) Pair {
 	needsReducted := true
 	for needsReducted {
-		fmt.Println(pair)
 		explode, split := pair.hasError(0)
 		if explode {
 			pair.(*Doppel).reduct(0)
@@ -69,8 +101,9 @@ type Pair interface {
 	addLeft(int)
 	addRight(int)
 	getNum() (int, bool)
-	split() Pair
+	split() (Pair, bool)
 	hasError(depth int) (bool, bool)
+	calcMagnitude() int
 }
 
 type Number struct {
@@ -79,6 +112,14 @@ type Number struct {
 
 type Doppel struct {
 	pair1, pair2 Pair
+}
+
+func (n *Number) calcMagnitude() int {
+	return n.number
+}
+
+func (d *Doppel) calcMagnitude() int {
+	return 3*d.pair1.calcMagnitude() + 2*d.pair2.calcMagnitude()
 }
 
 func (n *Number) hasError(depth int) (bool, bool) {
@@ -91,19 +132,21 @@ func (d *Doppel) hasError(depth int) (bool, bool) {
 	return leftDeep || rightDeep, leftNum || rightNum
 }
 
-func (n *Number) split() (result Pair) {
+func (n *Number) split() (result Pair, didSomething bool) {
 	if n.number > 9 {
 		result = &Doppel{pair1: &Number{number: n.number / 2}, pair2: &Number{number: n.number/2 + n.number%2}}
 	} else {
 		result = n
 	}
-	return result
+	return result, n.number > 9
 }
 
-func (d *Doppel) split() Pair {
-	d.pair1 = d.pair1.split()
-	d.pair2 = d.pair2.split()
-	return d
+func (d *Doppel) split() (result Pair, didSome bool) {
+	d.pair1, didSome = d.pair1.split()
+	if !didSome {
+		d.pair2, didSome = d.pair2.split()
+	}
+	return d, didSome
 }
 
 func (d *Doppel) explode() (int, int) {
@@ -113,7 +156,7 @@ func (d *Doppel) explode() (int, int) {
 	return number1, number2
 }
 
-func (d *Doppel) reduct(depth int) (number1, number2 int) {
+func (d *Doppel) reduct(depth int) (number1, number2 int, didSomething bool) {
 	_, is1Num := d.pair1.getNum()
 	_, is2Num := d.pair2.getNum()
 	if depth == 3 {
@@ -122,23 +165,27 @@ func (d *Doppel) reduct(depth int) (number1, number2 int) {
 			d.pair1 = &Number{number: 0}
 			d.pair2.addLeft(num2)
 			number1 = num1
+			didSomething = true
 		}
-		if !is2Num {
+		if !is2Num && !didSomething {
 			num1, num2 := d.pair2.(*Doppel).explode()
 			d.pair2 = &Number{number: 0}
 			d.pair1.addRight(num1)
 			number2 = num2
+			didSomething = true
 		}
 	} else {
 		if !is1Num {
-			num1, num2 := d.pair1.(*Doppel).reduct(depth + 1)
+			num1, num2, did := d.pair1.(*Doppel).reduct(depth + 1)
 			d.pair2.addLeft(num2)
 			number1 = num1
+			didSomething = did
 		}
-		if !is2Num {
-			num1, num2 := d.pair2.(*Doppel).reduct(depth + 1)
+		if !is2Num && !didSomething {
+			num1, num2, did := d.pair2.(*Doppel).reduct(depth + 1)
 			d.pair1.addRight(num1)
 			number2 = num2
+			didSomething = did
 		}
 	}
 	return
