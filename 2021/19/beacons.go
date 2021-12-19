@@ -39,15 +39,16 @@ func main() {
 
 	// vergleiche jeden relativvektor mit jedem - bei treffer count to 12 - if true use the rotation
 
-	// All list relativ to point schleife
+	// get all list from map
+	// All list relativ to point schleife - save relativ point
 	// turn schleife x
 	// turn schleife y
 	// turn schleife z
-	// check list relative to point schleife
+	// check list relative to point schleife - save sensor position
 	// for point in checkListe if allList contains point counter++
 	// if counter >= 12
-	// get sensor rotation - get realtiv position of new sensor
-	// put everything together in all list.
+	// get sensor rotation - get realtiv position of sensor
+	// put everything together in all map.
 }
 
 func contains(positions []Position, other Position) bool {
@@ -70,8 +71,24 @@ func getSliceRelativeToPoint(points []Position, num int) []Position {
 	return newPoints
 }
 
+func getSliceFromMap(maap map[Position]bool) []Position {
+	result := make([]Position, len(maap))
+	for value := range maap {
+		result = append(result, value)
+	}
+	return result
+}
+
 func (p *Position) getRelativePosition(other Position) Position {
 	return Position{x: other.x - p.x, y: other.y - p.y, z: other.z - p.z}
+}
+
+func (p *Position) add(other Position) Position {
+	return Position{x: p.x + other.x, y: p.y + other.y, z: p.z + other.z}
+}
+
+func (p *Position) subtract(other Position) Position {
+	return Position{x: p.x - other.x, y: p.y - other.y, z: p.z - other.z}
 }
 
 func readInSensors(input string) []*Sensor {
