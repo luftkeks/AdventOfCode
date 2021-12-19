@@ -67,6 +67,13 @@ func checkIfSensorIsAdjectedToAllMap(maap *map[Position]bool, sensor *Sensor) bo
 								if counter >= 12 {
 									//sensor Calculation
 									// get sensor rotation - get realtiv position of sensor
+
+									// TODO here is an error - somthinge somewhere dosnt work as
+									// inteded - this could be one of three issues
+									// 1. pos of sensor calc is wrong
+									// 2. transformation to first system is wrong
+									// 3. the map contains the elements twice in the end
+
 									(*sensor).pos = point.subtract(rotPos(matchingPoint, xRot, yRot, zRot))
 									(*sensor).xRot = xRot
 									(*sensor).yRot = yRot
