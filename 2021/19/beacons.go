@@ -19,16 +19,63 @@ type Position struct {
 }
 
 type Sensor struct {
-	name        string
-	pos         Position
-	orientation int
-	beacons     []Position
+	name             string
+	pos              Position
+	beacons          []Position
+	xRot, yRot, zRot int
 }
 
 func main() {
 	defer elapsed()()
+	sensors := readInSensors("test.txt")
+	fmt.Println(sensors)
 
-	dat, err := os.Open("test.txt")
+	setOfAll := map[Position]bool{}
+	sensors[0].pos = Position{x: 0, y: 0, z: 0}
+	for _, value := range sensors[0].beacons {
+		setOfAll[value.getRelativePosition(sensors[0].beacons[0])] = true
+	}
+	sensors[0].pos = sensors[0].pos.getRelativePosition(sensors[0].beacons[0])
+
+	// vergleiche jeden relativvektor mit jedem - bei treffer count to 12 - if true use the rotation
+
+	// All list relativ to point schleife
+	// turn schleife x
+	// turn schleife y
+	// turn schleife z
+	// check list relative to point schleife
+	// for point in checkListe if allList contains point counter++
+	// if counter >= 12
+	// get sensor rotation - get realtiv position of new sensor
+	// put everything together in all list.
+}
+
+func contains(positions []Position, other Position) bool {
+	for _, value := range positions {
+		if value == other {
+			return true
+		}
+	}
+	return false
+}
+
+func getSliceRelativeToPoint(points []Position, num int) []Position {
+	if num > len(points) {
+		panic("This is more then i can take")
+	}
+	newPoints := []Position{}
+	for _, value := range points {
+		newPoints = append(newPoints, value.getRelativePosition(points[num]))
+	}
+	return newPoints
+}
+
+func (p *Position) getRelativePosition(other Position) Position {
+	return Position{x: other.x - p.x, y: other.y - p.y, z: other.z - p.z}
+}
+
+func readInSensors(input string) []*Sensor {
+	dat, err := os.Open(input)
 	if err != nil {
 		panic("Hilfe File tut nicht")
 	}
@@ -55,62 +102,18 @@ func main() {
 			activeSensor.beacons = append(activeSensor.beacons, Position{x: x, y: y, z: z})
 		}
 	}
-	fmt.Println(sensors)
-
+	return sensors
 }
 
 // This should turn into every direction
-func (p *Position) getOrientation(ori int) Position {
-	switch ori % 24 {
-	case 0:
-		return Position{x: -p.x, y: p.y, z: p.z}
-	case 1:
-		return Position{x: p.x, y: -p.y, z: p.z}
-	case 2:
-		return Position{x: p.x, y: p.y, z: -p.z}
-	case 3:
-		return Position{x: -p.x, y: -p.y, z: p.z}
-	case 4:
-		return Position{x: p.x, y: -p.y, z: -p.z}
-	case 5:
-		return Position{x: -p.x, y: p.y, z: -p.z}
-	case 6:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 7:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 8:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 9:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 10:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 11:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 12:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 13:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 14:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 15:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 16:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 17:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 18:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 19:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 20:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 21:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 22:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	case 23:
-		return Position{x: -p.x, y: -p.y, z: -p.z}
-	default:
-		panic("This shouldn't be done.")
-	}
+func (p *Position) turnX() Position {
+	return Position{x: p.x, y: p.z, z: -p.y}
+}
+
+func (p *Position) turnY() Position {
+	return Position{x: p.z, y: p.y, z: -p.x}
+}
+
+func (p *Position) turnZ() Position {
+	return Position{x: p.y, y: -p.x, z: p.z}
 }
