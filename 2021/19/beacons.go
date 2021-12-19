@@ -27,7 +27,7 @@ type Sensor struct {
 
 func main() {
 	defer elapsed()()
-	sensors := readInSensors("test.txt")
+	sensors := readInSensors("input.txt")
 
 	setOfAll := map[Position]bool{}
 	sensors[0].pos = Position{x: 0, y: 0, z: 0}
@@ -121,7 +121,7 @@ func contains(positions []Position, other Position) bool {
 }
 
 func manhattanDistance(pos1, pos2 Position) int {
-	return Abs(pos1.x-pos2.x) + Abs(pos1.y+pos2.y) + Abs(pos1.z+pos2.z)
+	return Abs(pos1.x-pos2.x) + Abs(pos1.y-pos2.y) + Abs(pos1.z-pos2.z)
 }
 
 func Abs(x int) int {
