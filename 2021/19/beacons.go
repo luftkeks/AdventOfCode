@@ -36,18 +36,40 @@ func main() {
 	}
 
 	// vergleiche jeden relativvektor mit jedem - bei treffer count to 12 - if true use the rotation
-	sensor := sensors[1]
-	hit := checkIfSensorIsAdjectedToAllMap(&setOfAll, sensor)
-	if hit {
-		fmt.Println(len(setOfAll))
+	done := []int{0}
+	for {
+		for ii := 1; ii < len(sensors); ii++ {
+			if !containsInt(done, ii) {
+				hit := checkIfSensorIsAdjectedToAllMap(&setOfAll, sensors[ii])
+				if hit {
+					done = append(done, ii)
+					fmt.Printf("Found position of sensor %v. In total we found %v of %v sensors.\n", ii, len(done), len(sensors))
+				}
+			}
+		}
+		if len(done) == len(sensors) {
+			break
+		}
 	}
+	fmt.Printf("There are %v unique beacons.\n", len(setOfAll))
+
+	maxManhattanDistance := 0
+	for ii := range sensors {
+		for jj := 0; jj < ii; jj++ {
+			manDistance := manhattanDistance(sensors[ii].pos, sensors[jj].pos)
+			if maxManhattanDistance < manDistance {
+				maxManhattanDistance = manDistance
+			}
+		}
+	}
+	fmt.Printf("The max Manhattan distance is: %v\n", maxManhattanDistance)
 }
 
 func checkIfSensorIsAdjectedToAllMap(maap *map[Position]bool, sensor *Sensor) bool {
 	// get all list from map
 	allList := getSliceFromMap(maap)
 	// All list relativ to point schleife - save relativ point
-	for index, point := range allList {
+	for index, fixPoint := range allList {
 		listAllToCompare := getSliceRelativeToPoint(allList, index)
 		// turn schleife x
 		for xRot := 0; xRot < 4; xRot++ {
@@ -57,30 +79,25 @@ func checkIfSensorIsAdjectedToAllMap(maap *map[Position]bool, sensor *Sensor) bo
 				for zRot := 0; zRot < 4; zRot++ {
 					// check list relative to point schleife - save sensor position
 					for ii, matchingPoint := range sensor.beacons {
-						listSensorToCompare := rotSlice(getSliceRelativeToPoint(sensor.beacons, ii), xRot, yRot, zRot)
+						listSensor := rotSlice(sensor.beacons, xRot, yRot, zRot)
+						listSensorToCompare := getSliceRelativeToPoint(listSensor, ii)
 						counter := 0
 						// for point in checkListe if allList contains point counter++
-						for jj := 0; jj < len(listSensorToCompare); jj++ {
-							if contains(listAllToCompare, listSensorToCompare[jj]) {
+						for _, item := range listSensorToCompare {
+							if contains(listAllToCompare, item) {
 								counter++
 								// if counter >= 12
 								if counter >= 12 {
 									//sensor Calculation
 									// get sensor rotation - get realtiv position of sensor
-
-									// TODO here is an error - somthinge somewhere dosnt work as
-									// inteded - this could be one of three issues
-									// 1. pos of sensor calc is wrong
-									// 2. transformation to first system is wrong
-									// 3. the map contains the elements twice in the end
-
-									(*sensor).pos = point.subtract(rotPos(matchingPoint, xRot, yRot, zRot))
+									(*sensor).pos = fixPoint.subtract(rotPos(matchingPoint, xRot, yRot, zRot))
 									(*sensor).xRot = xRot
 									(*sensor).yRot = yRot
 									(*sensor).zRot = zRot
 									// put everything together in all map.
-									for _, elem := range listSensorToCompare {
-										(*maap)[(*sensor).pos.add(elem)] = true
+									for _, elem := range listSensor {
+										newBeaconPos := (*sensor).pos.add(elem)
+										(*maap)[newBeaconPos] = true
 									}
 									return true
 								}
@@ -95,6 +112,26 @@ func checkIfSensorIsAdjectedToAllMap(maap *map[Position]bool, sensor *Sensor) bo
 }
 
 func contains(positions []Position, other Position) bool {
+	for _, value := range positions {
+		if value == other {
+			return true
+		}
+	}
+	return false
+}
+
+func manhattanDistance(pos1, pos2 Position) int {
+	return Abs(pos1.x-pos2.x) + Abs(pos1.y+pos2.y) + Abs(pos1.z+pos2.z)
+}
+
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func containsInt(positions []int, other int) bool {
 	for _, value := range positions {
 		if value == other {
 			return true
