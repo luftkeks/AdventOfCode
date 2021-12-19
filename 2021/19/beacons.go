@@ -28,27 +28,63 @@ type Sensor struct {
 func main() {
 	defer elapsed()()
 	sensors := readInSensors("test.txt")
-	fmt.Println(sensors)
 
 	setOfAll := map[Position]bool{}
 	sensors[0].pos = Position{x: 0, y: 0, z: 0}
 	for _, value := range sensors[0].beacons {
-		setOfAll[value.getRelativePosition(sensors[0].beacons[0])] = true
+		setOfAll[value] = true
 	}
-	sensors[0].pos = sensors[0].pos.getRelativePosition(sensors[0].beacons[0])
 
 	// vergleiche jeden relativvektor mit jedem - bei treffer count to 12 - if true use the rotation
+	sensor := sensors[1]
+	hit := checkIfSensorIsAdjectedToAllMap(&setOfAll, sensor)
+	if hit {
+		fmt.Println(len(setOfAll))
+	}
+}
 
+func checkIfSensorIsAdjectedToAllMap(maap *map[Position]bool, sensor *Sensor) bool {
 	// get all list from map
+	allList := getSliceFromMap(maap)
 	// All list relativ to point schleife - save relativ point
-	// turn schleife x
-	// turn schleife y
-	// turn schleife z
-	// check list relative to point schleife - save sensor position
-	// for point in checkListe if allList contains point counter++
-	// if counter >= 12
-	// get sensor rotation - get realtiv position of sensor
-	// put everything together in all map.
+	for index, point := range allList {
+		listAllToCompare := getSliceRelativeToPoint(allList, index)
+		// turn schleife x
+		for xRot := 0; xRot < 4; xRot++ {
+			// turn schleife y
+			for yRot := 0; yRot < 4; yRot++ {
+				// turn schleife z
+				for zRot := 0; zRot < 4; zRot++ {
+					// check list relative to point schleife - save sensor position
+					for ii, matchingPoint := range sensor.beacons {
+						listSensorToCompare := rotSlice(getSliceRelativeToPoint(sensor.beacons, ii), xRot, yRot, zRot)
+						counter := 0
+						// for point in checkListe if allList contains point counter++
+						for jj := 0; jj < len(listSensorToCompare); jj++ {
+							if contains(listAllToCompare, listSensorToCompare[jj]) {
+								counter++
+								// if counter >= 12
+								if counter >= 12 {
+									//sensor Calculation
+									// get sensor rotation - get realtiv position of sensor
+									(*sensor).pos = point.subtract(rotPos(matchingPoint, xRot, yRot, zRot))
+									(*sensor).xRot = xRot
+									(*sensor).yRot = yRot
+									(*sensor).zRot = zRot
+									// put everything together in all map.
+									for _, elem := range listSensorToCompare {
+										(*maap)[(*sensor).pos.add(elem)] = true
+									}
+									return true
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return false
 }
 
 func contains(positions []Position, other Position) bool {
@@ -58,6 +94,27 @@ func contains(positions []Position, other Position) bool {
 		}
 	}
 	return false
+}
+
+func rotSlice(slice []Position, xRot, yRot, zRot int) []Position {
+	result := make([]Position, len(slice))
+	for index, pos := range slice {
+		result[index] = rotPos(pos, xRot, yRot, zRot)
+	}
+	return result
+}
+
+func rotPos(pos Position, xRot, yRot, zRot int) Position {
+	for xx := 0; xx < xRot; xx++ {
+		pos = pos.turnX()
+	}
+	for yy := 0; yy < yRot; yy++ {
+		pos = pos.turnY()
+	}
+	for zz := 0; zz < zRot; zz++ {
+		pos = pos.turnZ()
+	}
+	return pos
 }
 
 func getSliceRelativeToPoint(points []Position, num int) []Position {
@@ -71,9 +128,9 @@ func getSliceRelativeToPoint(points []Position, num int) []Position {
 	return newPoints
 }
 
-func getSliceFromMap(maap map[Position]bool) []Position {
-	result := make([]Position, len(maap))
-	for value := range maap {
+func getSliceFromMap(maap *map[Position]bool) []Position {
+	result := []Position{}
+	for value := range *maap {
 		result = append(result, value)
 	}
 	return result
@@ -105,11 +162,11 @@ func readInSensors(input string) []*Sensor {
 	}
 
 	sensors := []*Sensor{}
-	var activeSensor Sensor
+	var activeSensor *Sensor
 	for _, line := range lines {
 		if strings.Contains(line, "scanner") {
-			activeSensor = Sensor{name: line[4 : len(line)-4], beacons: []Position{}}
-			sensors = append(sensors, &activeSensor)
+			activeSensor = &Sensor{name: line[4 : len(line)-4], beacons: []Position{}}
+			sensors = append(sensors, activeSensor)
 			continue
 		} else if len(line) != 0 {
 			pos := strings.Split(line, ",")
