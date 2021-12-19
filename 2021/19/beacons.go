@@ -56,4 +56,61 @@ func main() {
 		}
 	}
 	fmt.Println(sensors)
+
+}
+
+// This should turn into every direction
+func (p *Position) getOrientation(ori int) Position {
+	switch ori % 24 {
+	case 0:
+		return Position{x: -p.x, y: p.y, z: p.z}
+	case 1:
+		return Position{x: p.x, y: -p.y, z: p.z}
+	case 2:
+		return Position{x: p.x, y: p.y, z: -p.z}
+	case 3:
+		return Position{x: -p.x, y: -p.y, z: p.z}
+	case 4:
+		return Position{x: p.x, y: -p.y, z: -p.z}
+	case 5:
+		return Position{x: -p.x, y: p.y, z: -p.z}
+	case 6:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 7:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 8:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 9:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 10:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 11:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 12:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 13:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 14:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 15:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 16:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 17:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 18:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 19:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 20:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 21:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 22:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	case 23:
+		return Position{x: -p.x, y: -p.y, z: -p.z}
+	default:
+		panic("This shouldn't be done.")
+	}
 }
