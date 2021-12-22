@@ -27,7 +27,7 @@ type Area struct {
 
 func main() {
 	defer elapsed()()
-	dat, err := os.Open("test2.txt")
+	dat, err := os.Open("input.txt")
 	if err != nil {
 		panic("Hilfe File tut nicht")
 	}
@@ -42,13 +42,13 @@ func main() {
 	areas := readInLines(lines)
 
 	// Part 1
-	dots := map[Position]bool{}
+	dots1 := map[Position]bool{}
 	for _, area := range areas {
-		for xx := area.Xstart; xx <= area.XFinish; xx++ {
-			for yy := area.Ystart; yy <= area.YFinish; yy++ {
-				for zz := area.Zstart; zz <= area.ZFinish; zz++ {
-					if Abs(xx) <= 50 && Abs(yy) <= 50 && Abs(zz) <= 50 {
-						dots[Position{x: xx, y: yy, z: zz}] = area.on
+		if area.inBounds(50) {
+			for xx := area.Xstart; xx <= area.XFinish; xx++ {
+				for yy := area.Ystart; yy <= area.YFinish; yy++ {
+					for zz := area.Zstart; zz <= area.ZFinish; zz++ {
+						dots1[Position{x: xx, y: yy, z: zz}] = area.on
 					}
 				}
 			}
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	counter1 := 0
-	for _, value := range dots {
+	for _, value := range dots1 {
 		if value {
 			counter1++
 		}
@@ -64,6 +64,20 @@ func main() {
 
 	fmt.Printf("In Part One are %v on.\n", counter1)
 
+	// Part 2
+	dots2 := map[Position]bool{}
+	for _, area := range areas {
+		// This has to be recursive areas with sub areas which then difine on and off parts and kann be just added and subtracted
+	}
+
+	counter2 := 0
+	for _, value := range dots2 {
+		if value {
+			counter2++
+		}
+	}
+
+	fmt.Printf("In Part Two are %v on.\n", counter2)
 }
 
 func readInLines(lines []string) []Area {
@@ -85,6 +99,19 @@ func readInLines(lines []string) []Area {
 		areas = append(areas, Area{Xstart: xStart, XFinish: xfinish, Ystart: yStart, YFinish: yFinish, Zstart: zStart, ZFinish: zFinish, on: on})
 	}
 	return areas
+}
+
+func (a *Area) inBounds(border int) bool {
+	return Abs(a.Xstart) <= border && Abs(a.XFinish) <= border && Abs(a.Ystart) <= border && Abs(a.YFinish) <= border && Abs(a.Zstart) <= border && Abs(a.ZFinish) <= border
+}
+
+// TODO implement this
+func (a *Area) getOverlap(b *Area) (in, out Area) {
+	return 0, 0
+}
+
+func (a *Area) getNumberOfLit() int {
+
 }
 
 func Abs(x int) int {

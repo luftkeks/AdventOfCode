@@ -61,33 +61,25 @@ func main() {
 	fmt.Printf(" vgl mit lösung 1: %v       2: %v\n", player1-444356092776315, player2-341960390180808)
 }
 
-func playRound(dice1, dice2, number1, number2, score1, score2 int, multiplicator int) (player1won, player2won int) {
+func startRound(number1old, number2old, score1old, score2old int, multiplicator int) (int, int) {
 	winCondition := 21
-	multi1 := multimap[dice1]
-	multi2 := multimap[dice2]
-
-	number1 = (number1-1+dice1)%10 + 1
-	number2 = (number2-1+dice2)%10 + 1
-	score1 += number1
-	score2 += number2
-
-	if score1 >= winCondition {
-		return multiplicator * multi1, 0
-	}
-	if score2 >= winCondition {
-		return 0, multiplicator * multi1 * multi2
-	}
-	return startRound(number1, number2, score1, score2, multiplicator*multi1*multi2)
-}
-
-func startRound(number1, number2, score1, score2 int, multiplicator int) (int, int) {
 	player1won := 0
 	player2won := 0
 	for dice1 := 3; dice1 <= 9; dice1++ {
 		for dice2 := 3; dice2 <= 9; dice2++ {
-			player1wonTemp, player2wonTemp := playRound(dice1, dice2, number1, number2, score1, score2, multiplicator)
-			player1won += player1wonTemp
-			player2won += player2wonTemp
+			number1new := (number1old-1+dice1)%10 + 1
+			number2new := (number2old-1+dice2)%10 + 1
+			score1new := score1old + number1new
+			score2new := score2old + number2new
+			if score1new >= winCondition {
+				player1won += multiplicator * multimap[dice1]
+			} else if score2new >= winCondition {
+				player2won += multiplicator * multimap[dice1] * multimap[dice2]
+			} else {
+				player1wonTemp, player2wonTemp := startRound(number1new, number2new, score1new, score2new, multiplicator*multimap[dice1]*multimap[dice2])
+				player1won += player1wonTemp
+				player2won += player2wonTemp
+			}
 		}
 	}
 	return player1won, player2won
