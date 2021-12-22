@@ -3,14 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math/big"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-var multimap map[int]big.Int
+var multimap map[int]int
 
 func elapsed() func() {
 	start := time.Now()
@@ -55,14 +54,14 @@ func main() {
 
 	partOne(number1, number2)
 
-	multimap = map[int]big.Int{3: *big.NewInt(int64(1)), 4: *big.NewInt(int64(3)), 5: *big.NewInt(int64(6)), 6: *big.NewInt(int64(7)), 7: *big.NewInt(int64(6)), 8: *big.NewInt(int64(3)), 9: *big.NewInt(int64(1))}
-	player1, player2 := startRound(number1, number2, 0, 0, *big.NewInt(1))
+	multimap = map[int]int{3: 1, 4: 3, 5: 6, 6: 7, 7: 6, 8: 3, 9: 1}
+	player1, player2 := startRound(number1, number2, 0, 0, 1)
 
 	fmt.Printf("times won player1: %v player2: %v\n", player1, player2)
-	fmt.Printf(" vgl mit lösung 1: %v       2: %v\n", player1.Sub(&player1, big.NewInt(int64(444356092776315))), player2.Sub(&player2, big.NewInt(int64(444356092776315))))
+	fmt.Printf(" vgl mit lösung 1: %v       2: %v\n", player1-444356092776315, player2-341960390180808)
 }
 
-func playRound(dice1, dice2, number1, number2, score1, score2 int, multiplicator *big.Int) (player1won, player2won big.Int) {
+func playRound(dice1, dice2, number1, number2, score1, score2 int, multiplicator int) (player1won, player2won int) {
 	winCondition := 21
 	multi1 := multimap[dice1]
 	multi2 := multimap[dice2]
@@ -73,25 +72,25 @@ func playRound(dice1, dice2, number1, number2, score1, score2 int, multiplicator
 	score2 += number2
 
 	if score1 >= winCondition {
-		return *big.NewInt(int64(0)), *multiplicator.Mul(multiplicator, &multi1)
+		return multiplicator * multi1, 0
 	}
 	if score2 >= winCondition {
-		return *multiplicator.Mul(multiplicator, &multi1).Mul(multiplicator, &multi2), *big.NewInt(int64(0))
+		return 0, multiplicator * multi1 * multi2
 	}
-	return startRound(number1, number2, score1, score2, *multiplicator.Mul(multiplicator, &multi1).Mul(multiplicator, &multi2))
+	return startRound(number1, number2, score1, score2, multiplicator*multi1*multi2)
 }
 
-func startRound(number1, number2, score1, score2 int, multiplicator big.Int) (big.Int, big.Int) {
-	player1won := big.NewInt(int64(0))
-	player2won := big.NewInt(int64(0))
+func startRound(number1, number2, score1, score2 int, multiplicator int) (int, int) {
+	player1won := 0
+	player2won := 0
 	for dice1 := 3; dice1 <= 9; dice1++ {
 		for dice2 := 3; dice2 <= 9; dice2++ {
-			player1wonTemp, player2wonTemp := playRound(dice1, dice2, number1, number2, score1, score2, &multiplicator)
-			player1won.Add(player1won, &player1wonTemp)
-			player2won.Add(player2won, &player2wonTemp)
+			player1wonTemp, player2wonTemp := playRound(dice1, dice2, number1, number2, score1, score2, multiplicator)
+			player1won += player1wonTemp
+			player2won += player2wonTemp
 		}
 	}
-	return *player1won, *player2won
+	return player1won, player2won
 }
 
 func partOne(number1, number2 int) {
