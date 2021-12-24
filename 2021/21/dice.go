@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-var multimap map[int]int
-
 func elapsed() func() {
 	start := time.Now()
 	return func() { fmt.Printf("Day took %v\n", time.Since(start)) }
@@ -54,14 +52,14 @@ func main() {
 
 	partOne(number1, number2)
 
-	multimap = map[int]int{3: 1, 4: 3, 5: 6, 6: 7, 7: 6, 8: 3, 9: 1}
-	player1, player2 := startRound(number1, number2, 0, 0, 1)
+	multimap := map[int]int{3: 1, 4: 3, 5: 6, 6: 7, 7: 6, 8: 3, 9: 1}
+	player1, player2 := startRound(number1, number2, 0, 0, 1, &multimap)
 
 	fmt.Printf("times won player1: %v player2: %v\n", player1, player2)
 	fmt.Printf(" vgl mit lösung 1: %v       2: %v\n", player1-444356092776315, player2-341960390180808)
 }
 
-func startRound(number1old, number2old, score1old, score2old int, multiplicator int) (int, int) {
+func startRound(number1old, number2old, score1old, score2old int, multiplicator int, multimap *map[int]int) (int, int) {
 	winCondition := 21
 	player1won := 0
 	player2won := 0
@@ -72,17 +70,21 @@ func startRound(number1old, number2old, score1old, score2old int, multiplicator 
 			score1new := score1old + number1new
 			score2new := score2old + number2new
 			if score1new >= winCondition {
-				player1won += multiplicator * multimap[dice1]
+				player1won += multiplicator * (*multimap)[dice1]
 			} else if score2new >= winCondition {
-				player2won += multiplicator * multimap[dice1] * multimap[dice2]
+				player2won += multiplicator * (*multimap)[dice1] * (*multimap)[dice2]
 			} else {
-				player1wonTemp, player2wonTemp := startRound(number1new, number2new, score1new, score2new, multiplicator*multimap[dice1]*multimap[dice2])
+				player1wonTemp, player2wonTemp := startRound(number1new, number2new, score1new, score2new, multiplicator*(*multimap)[dice1]*(*multimap)[dice2], multimap)
 				player1won += player1wonTemp
 				player2won += player2wonTemp
 			}
 		}
 	}
 	return player1won, player2won
+}
+
+func doStep(dice, number, score, multi int, multimap *map[int]int) (scoreNew, numberNew, multiNew int) {
+
 }
 
 func partOne(number1, number2 int) {
