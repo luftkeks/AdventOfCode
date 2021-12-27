@@ -42,13 +42,38 @@ func main() {
 	areas := readInLines(lines)
 
 	// Part 1
-	partOne(areas)
+	test1 := partOne(areas)
 
 	// Part 2
 	countableAreas := []Area{}
 
 	for _, area := range areas {
-
+		if area.inBounds(50) {
+			noOverlap := true
+			for index, cArea := range countableAreas {
+				overlap := area.getOverlap(&cArea)
+				if overlap.getNumberOfLit() > 0 {
+					noOverlap = false
+					if len(countableAreas) == 1 {
+						countableAreas = []Area{}
+					} else if index == 0 {
+						countableAreas = countableAreas[1 : len(countableAreas)-1]
+					} else if index == len(countableAreas)-1 {
+						countableAreas = countableAreas[0 : len(countableAreas)-2]
+					} else {
+						countableAreas = append(countableAreas[0:index], countableAreas[index+1:len(countableAreas)-1]...)
+					}
+					countableAreas = append(countableAreas, area.splitAreaAroundArea(&overlap)...)
+					countableAreas = append(countableAreas, cArea.splitAreaAroundArea(&overlap)...)
+					if overlap.on {
+						countableAreas = append(countableAreas, overlap)
+					}
+				}
+			}
+			if noOverlap && area.on {
+				countableAreas = append(countableAreas, area)
+			}
+		}
 	}
 
 	counter2 := 0
@@ -56,6 +81,9 @@ func main() {
 		counter2 += area.getNumberOfLit()
 	}
 	fmt.Printf("In Part Two are %v on.\n", counter2)
+	if test1 != counter2 {
+		panic("uff")
+	}
 }
 
 func readInLines(lines []string) []Area {
@@ -87,27 +115,91 @@ func (a *Area) getOverlap(b *Area) (overlapp Area) {
 	return Area{Xstart: Max(a.Xstart, b.Xstart), XFinish: Min(a.XFinish, b.XFinish), Ystart: Max(a.Ystart, b.Ystart), YFinish: Min(a.YFinish, b.YFinish), Zstart: Max(a.Zstart, b.Zstart), ZFinish: Min(a.ZFinish, b.ZFinish), on: a.on && b.on}
 }
 
-func (a *Area) overlapps(b *Area) bool {
-	if a.Xstart <= b.XFinish && a.XFinish >= b.XFinish {
-		return true
+func (a *Area) splitAreaAroundArea(b *Area) []Area {
+	result := []Area{}
+
+	if a.Xstart < b.Xstart {
+		xAreaStart := Area{Xstart: a.Xstart, XFinish: b.Xstart - 1, Ystart: a.Ystart, YFinish: a.YFinish, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
+		result = append(result, xAreaStart)
 	}
-	if a.Xstart <= b.Xstart && a.XFinish >= b.Xstart {
-		return true
+
+	if a.XFinish > b.XFinish {
+		xAreaFinish := Area{Xstart: b.XFinish + 1, XFinish: a.XFinish, Ystart: a.Ystart, YFinish: a.YFinish, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
+		result = append(result, xAreaFinish)
 	}
-	if a.Ystart <= b.Ystart && a.YFinish >= b.Ystart {
-		return true
+
+	var xStart int
+	if b.Xstart < a.Xstart {
+		xStart = a.Xstart
+	} else {
+		xStart = b.Xstart
 	}
-	if a.Ystart <= b.YFinish && a.YFinish >= b.YFinish {
-		return true
+
+	var xFinish int
+	if b.XFinish > a.XFinish {
+		xFinish = a.XFinish
+	} else {
+		xFinish = b.XFinish
 	}
-	if a.Zstart <= b.Zstart && a.ZFinish >= b.Zstart {
-		return true
+
+	if a.Ystart < b.Ystart {
+		yAreaStart := Area{Xstart: xStart, XFinish: xFinish, Ystart: a.Ystart, YFinish: b.Ystart - 1, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
+		result = append(result, yAreaStart)
 	}
-	if a.Zstart <= b.ZFinish && a.ZFinish >= b.ZFinish {
-		return true
+
+	if a.YFinish > b.YFinish {
+		yAreaFinish := Area{Xstart: xStart, XFinish: xFinish, Ystart: b.YFinish + 1, YFinish: b.Ystart, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
+		result = append(result, yAreaFinish)
 	}
-	return false
+
+	var yStart int
+	if b.Ystart < a.Ystart {
+		yStart = a.Ystart
+	} else {
+		yStart = b.Ystart
+	}
+
+	var yFinish int
+	if b.YFinish > a.YFinish {
+		yFinish = a.YFinish
+	} else {
+		yFinish = b.YFinish
+	}
+
+	if a.Zstart < b.Zstart {
+		zAreaStart := Area{Xstart: xStart, XFinish: xFinish, Ystart: yStart, YFinish: yFinish, Zstart: a.Zstart, ZFinish: b.Zstart - 1, on: a.on}
+		result = append(result, zAreaStart)
+	}
+
+	if a.ZFinish > b.ZFinish {
+		zAreaFinish := Area{Xstart: xStart, XFinish: xFinish, Ystart: yStart, YFinish: yFinish, Zstart: b.ZFinish + 1, ZFinish: a.ZFinish, on: a.on}
+		result = append(result, zAreaFinish)
+	}
+
+	return result
 }
+
+// func (a *Area) overlapps(b *Area) bool {
+// 	if a.Xstart <= b.XFinish && a.XFinish >= b.XFinish {
+// 		return true
+// 	}
+// 	if a.Xstart <= b.Xstart && a.XFinish >= b.Xstart {
+// 		return true
+// 	}
+// 	if a.Ystart <= b.Ystart && a.YFinish >= b.Ystart {
+// 		return true
+// 	}
+// 	if a.Ystart <= b.YFinish && a.YFinish >= b.YFinish {
+// 		return true
+// 	}
+// 	if a.Zstart <= b.Zstart && a.ZFinish >= b.Zstart {
+// 		return true
+// 	}
+// 	if a.Zstart <= b.ZFinish && a.ZFinish >= b.ZFinish {
+// 		return true
+// 	}
+// 	return false
+// }
 
 func createMatchingSubCubes(area1, area2 Area) []Area {
 	// this has to be implemented
@@ -134,7 +226,7 @@ func Abs(x int) int {
 	return x
 }
 
-func partOne(areas []Area) {
+func partOne(areas []Area) int {
 	dots1 := map[Position]bool{}
 	for _, area := range areas {
 		if area.inBounds(50) {
@@ -156,6 +248,7 @@ func partOne(areas []Area) {
 	}
 
 	fmt.Printf("In Part One are %v on.\n", counter1)
+	return counter1
 }
 
 func Max(a, b int) int {
