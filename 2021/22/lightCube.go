@@ -42,41 +42,19 @@ func main() {
 	areas := readInLines(lines)
 
 	// Part 1
-	dots1 := map[Position]bool{}
-	for _, area := range areas {
-		if area.inBounds(50) {
-			for xx := area.Xstart; xx <= area.XFinish; xx++ {
-				for yy := area.Ystart; yy <= area.YFinish; yy++ {
-					for zz := area.Zstart; zz <= area.ZFinish; zz++ {
-						dots1[Position{x: xx, y: yy, z: zz}] = area.on
-					}
-				}
-			}
-		}
-	}
-
-	counter1 := 0
-	for _, value := range dots1 {
-		if value {
-			counter1++
-		}
-	}
-
-	fmt.Printf("In Part One are %v on.\n", counter1)
+	partOne(areas)
 
 	// Part 2
-	dots2 := map[Position]bool{}
+	countableAreas := []Area{}
+
 	for _, area := range areas {
-		// This has to be recursive areas with sub areas which then difine on and off parts and kann be just added and subtracted
+
 	}
 
 	counter2 := 0
-	for _, value := range dots2 {
-		if value {
-			counter2++
-		}
+	for _, area := range countableAreas {
+		counter2 += area.getNumberOfLit()
 	}
-
 	fmt.Printf("In Part Two are %v on.\n", counter2)
 }
 
@@ -105,13 +83,48 @@ func (a *Area) inBounds(border int) bool {
 	return Abs(a.Xstart) <= border && Abs(a.XFinish) <= border && Abs(a.Ystart) <= border && Abs(a.YFinish) <= border && Abs(a.Zstart) <= border && Abs(a.ZFinish) <= border
 }
 
-// TODO implement this
-func (a *Area) getOverlap(b *Area) (in, out Area) {
-	return 0, 0
+func (a *Area) getOverlap(b *Area) (overlapp Area) {
+	return Area{Xstart: Max(a.Xstart, b.Xstart), XFinish: Min(a.XFinish, b.XFinish), Ystart: Max(a.Ystart, b.Ystart), YFinish: Min(a.YFinish, b.YFinish), Zstart: Max(a.Zstart, b.Zstart), ZFinish: Min(a.ZFinish, b.ZFinish), on: a.on && b.on}
+}
+
+func (a *Area) overlapps(b *Area) bool {
+	if a.Xstart <= b.XFinish && a.XFinish >= b.XFinish {
+		return true
+	}
+	if a.Xstart <= b.Xstart && a.XFinish >= b.Xstart {
+		return true
+	}
+	if a.Ystart <= b.Ystart && a.YFinish >= b.Ystart {
+		return true
+	}
+	if a.Ystart <= b.YFinish && a.YFinish >= b.YFinish {
+		return true
+	}
+	if a.Zstart <= b.Zstart && a.ZFinish >= b.Zstart {
+		return true
+	}
+	if a.Zstart <= b.ZFinish && a.ZFinish >= b.ZFinish {
+		return true
+	}
+	return false
+}
+
+func createMatchingSubCubes(area1, area2 Area) []Area {
+	// this has to be implemented
+	// Check for borderes and create an overlapping area
+	// if both are lit keep overlapp once if only one is lit keep area without overlapp
+	// make sub cubes around the overlapping area
+	// if there is a lit area and an off area keep none of them - rest keep only lit
+	result := []Area{}
+	return result
 }
 
 func (a *Area) getNumberOfLit() int {
-
+	result := 0
+	if a.on {
+		result = Abs(a.XFinish-a.Xstart+1) * Abs(a.YFinish-a.Ystart+1) * Abs(a.ZFinish-a.Zstart+1)
+	}
+	return result
 }
 
 func Abs(x int) int {
@@ -119,4 +132,44 @@ func Abs(x int) int {
 		return -x
 	}
 	return x
+}
+
+func partOne(areas []Area) {
+	dots1 := map[Position]bool{}
+	for _, area := range areas {
+		if area.inBounds(50) {
+			for xx := area.Xstart; xx <= area.XFinish; xx++ {
+				for yy := area.Ystart; yy <= area.YFinish; yy++ {
+					for zz := area.Zstart; zz <= area.ZFinish; zz++ {
+						dots1[Position{x: xx, y: yy, z: zz}] = area.on
+					}
+				}
+			}
+		}
+	}
+
+	counter1 := 0
+	for _, value := range dots1 {
+		if value {
+			counter1++
+		}
+	}
+
+	fmt.Printf("In Part One are %v on.\n", counter1)
+}
+
+func Max(a, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func Min(a, b int) int {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
 }

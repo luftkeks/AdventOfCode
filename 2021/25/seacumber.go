@@ -91,13 +91,13 @@ func createNewMap(mapp [][]rune, keep ...rune) [][]rune {
 	return result
 }
 
-func printMap(mapp [][]rune) {
-	fmt.Printf("\n")
-	for ii := 0; ii < len(mapp); ii++ {
-		fmt.Printf("%v\n", string(mapp[ii]))
-	}
-	fmt.Printf("\n")
-}
+// func printMap(mapp [][]rune) {
+// 	fmt.Printf("\n")
+// 	for ii := 0; ii < len(mapp); ii++ {
+// 		fmt.Printf("%v\n", string(mapp[ii]))
+// 	}
+// 	fmt.Printf("\n")
+// }
 
 func containsRune(slice []rune, other rune) bool {
 	for _, value := range slice {
