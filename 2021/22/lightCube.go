@@ -42,48 +42,84 @@ func main() {
 	areas := readInLines(lines)
 
 	// Part 1
-	test1 := partOne(areas)
+	partOne(areas)
 
 	// Part 2
-	countableAreas := []Area{}
+	countableAreas := &[]*Area{}
 
 	for _, area := range areas {
 		if area.inBounds(50) {
 			noOverlap := true
-			for index, cArea := range countableAreas {
-				overlap := area.getOverlap(&cArea)
-				if overlap.getNumberOfLit() > 0 {
-					noOverlap = false
-					if len(countableAreas) == 1 {
-						countableAreas = []Area{}
-					} else if index == 0 {
-						countableAreas = countableAreas[1 : len(countableAreas)-1]
-					} else if index == len(countableAreas)-1 {
-						countableAreas = countableAreas[0 : len(countableAreas)-2]
-					} else {
-						countableAreas = append(countableAreas[0:index], countableAreas[index+1:len(countableAreas)-1]...)
-					}
-					countableAreas = append(countableAreas, area.splitAreaAroundArea(&overlap)...)
-					countableAreas = append(countableAreas, cArea.splitAreaAroundArea(&overlap)...)
-					if overlap.on {
-						countableAreas = append(countableAreas, overlap)
-					}
-				}
-			}
+			countableAreas, noOverlap = addIfPossible(countableAreas, &area)
+			// for index, cArea := range countableAreas {
+			// 	overlap := area.getOverlap(cArea)
+			// 	if overlap.getNumberOfLit() > 0 {
+			// 		noOverlap = false
+			// 		if len(countableAreas) == 1 {
+			// 			countableAreas = []*Area{}
+			// 		} else if index == 0 {
+			// 			countableAreas = countableAreas[1 : len(countableAreas)-1]
+			// 		} else if index == len(countableAreas)-1 {
+			// 			countableAreas = countableAreas[0 : len(countableAreas)-2]
+			// 		} else {
+			// 			countableAreas = append(countableAreas[0:index], countableAreas[index+1:len(countableAreas)-1]...)
+			// 		}
+			// 		if area.getNumberOfLit() > overlap.getNumberOfLit() {
+			// 			countableAreas = append(countableAreas, cArea.splitAreaAroundArea(overlap)...)
+			// 			countableAreas = append(countableAreas, area.splitAreaAroundArea(overlap)...)
+			// 		}
+			// 		if overlap.on {
+			// 			countableAreas = append(countableAreas, overlap)
+			// 		}
+			// 	}
+			// }
 			if noOverlap && area.on {
-				countableAreas = append(countableAreas, area)
+				countableAreasTemp := append((*countableAreas), &area)
+				countableAreas = &countableAreasTemp
 			}
 		}
 	}
 
 	counter2 := 0
-	for _, area := range countableAreas {
+	for _, area := range *countableAreas {
 		counter2 += area.getNumberOfLit()
 	}
 	fmt.Printf("In Part Two are %v on.\n", counter2)
-	if test1 != counter2 {
-		panic("uff")
+}
+
+func addIfPossible(cAreas *[]*Area, area *Area) (*[]*Area, bool) {
+	noOverlap := true
+	countableAreas := *cAreas
+	for ii, cArea := range countableAreas {
+		overlap := area.getOverlap(cArea)
+		if overlap.getNumberOfLit() > 0 {
+			noOverlap = false
+			if len(countableAreas) == 1 {
+				countableAreas = []*Area{}
+			} else if ii == 0 {
+				countableAreas = countableAreas[1 : len(countableAreas)-1]
+			} else if ii == len(countableAreas)-1 {
+				countableAreas = countableAreas[0 : len(countableAreas)-2]
+			} else {
+				countableAreas = append(countableAreas[0:ii], countableAreas[ii+1:len(countableAreas)-1]...)
+			}
+			if overlap.on {
+				countableAreas = append(countableAreas, overlap)
+			}
+			if area.getNumberOfLit() > overlap.getNumberOfLit() {
+				countableAreas = append(countableAreas, cArea.splitAreaAroundArea(overlap)...)
+				for _, area1 := range area.splitAreaAroundArea(overlap) {
+					countableAreasTemp, didNothing := addIfPossible(&countableAreas, area1)
+					countableAreas = *countableAreasTemp
+					if didNothing {
+						countableAreas = append(countableAreas, area1)
+					}
+				}
+				return &countableAreas, noOverlap
+			}
+		}
 	}
+	return &countableAreas, noOverlap
 }
 
 func readInLines(lines []string) []Area {
@@ -111,21 +147,21 @@ func (a *Area) inBounds(border int) bool {
 	return Abs(a.Xstart) <= border && Abs(a.XFinish) <= border && Abs(a.Ystart) <= border && Abs(a.YFinish) <= border && Abs(a.Zstart) <= border && Abs(a.ZFinish) <= border
 }
 
-func (a *Area) getOverlap(b *Area) (overlapp Area) {
-	return Area{Xstart: Max(a.Xstart, b.Xstart), XFinish: Min(a.XFinish, b.XFinish), Ystart: Max(a.Ystart, b.Ystart), YFinish: Min(a.YFinish, b.YFinish), Zstart: Max(a.Zstart, b.Zstart), ZFinish: Min(a.ZFinish, b.ZFinish), on: a.on && b.on}
+func (a *Area) getOverlap(b *Area) (overlapp *Area) {
+	return &Area{Xstart: Max(a.Xstart, b.Xstart), XFinish: Min(a.XFinish, b.XFinish), Ystart: Max(a.Ystart, b.Ystart), YFinish: Min(a.YFinish, b.YFinish), Zstart: Max(a.Zstart, b.Zstart), ZFinish: Min(a.ZFinish, b.ZFinish), on: a.on && b.on}
 }
 
-func (a *Area) splitAreaAroundArea(b *Area) []Area {
-	result := []Area{}
+func (a *Area) splitAreaAroundArea(b *Area) []*Area {
+	result := []*Area{}
 
 	if a.Xstart < b.Xstart {
 		xAreaStart := Area{Xstart: a.Xstart, XFinish: b.Xstart - 1, Ystart: a.Ystart, YFinish: a.YFinish, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
-		result = append(result, xAreaStart)
+		result = append(result, &xAreaStart)
 	}
 
 	if a.XFinish > b.XFinish {
 		xAreaFinish := Area{Xstart: b.XFinish + 1, XFinish: a.XFinish, Ystart: a.Ystart, YFinish: a.YFinish, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
-		result = append(result, xAreaFinish)
+		result = append(result, &xAreaFinish)
 	}
 
 	var xStart int
@@ -144,12 +180,12 @@ func (a *Area) splitAreaAroundArea(b *Area) []Area {
 
 	if a.Ystart < b.Ystart {
 		yAreaStart := Area{Xstart: xStart, XFinish: xFinish, Ystart: a.Ystart, YFinish: b.Ystart - 1, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
-		result = append(result, yAreaStart)
+		result = append(result, &yAreaStart)
 	}
 
 	if a.YFinish > b.YFinish {
-		yAreaFinish := Area{Xstart: xStart, XFinish: xFinish, Ystart: b.YFinish + 1, YFinish: b.Ystart, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
-		result = append(result, yAreaFinish)
+		yAreaFinish := Area{Xstart: xStart, XFinish: xFinish, Ystart: b.YFinish + 1, YFinish: a.YFinish, Zstart: a.Zstart, ZFinish: a.ZFinish, on: a.on}
+		result = append(result, &yAreaFinish)
 	}
 
 	var yStart int
@@ -168,12 +204,12 @@ func (a *Area) splitAreaAroundArea(b *Area) []Area {
 
 	if a.Zstart < b.Zstart {
 		zAreaStart := Area{Xstart: xStart, XFinish: xFinish, Ystart: yStart, YFinish: yFinish, Zstart: a.Zstart, ZFinish: b.Zstart - 1, on: a.on}
-		result = append(result, zAreaStart)
+		result = append(result, &zAreaStart)
 	}
 
 	if a.ZFinish > b.ZFinish {
 		zAreaFinish := Area{Xstart: xStart, XFinish: xFinish, Ystart: yStart, YFinish: yFinish, Zstart: b.ZFinish + 1, ZFinish: a.ZFinish, on: a.on}
-		result = append(result, zAreaFinish)
+		result = append(result, &zAreaFinish)
 	}
 
 	return result
@@ -214,7 +250,12 @@ func createMatchingSubCubes(area1, area2 Area) []Area {
 func (a *Area) getNumberOfLit() int {
 	result := 0
 	if a.on {
-		result = Abs(a.XFinish-a.Xstart+1) * Abs(a.YFinish-a.Ystart+1) * Abs(a.ZFinish-a.Zstart+1)
+		xStuff := (a.XFinish - a.Xstart + 1)
+		yStuff := (a.YFinish - a.Ystart + 1)
+		zStuff := (a.ZFinish - a.Zstart + 1)
+		if xStuff > 0 && yStuff > 0 && zStuff > 0 {
+			result = xStuff * yStuff * zStuff
+		}
 	}
 	return result
 }
@@ -226,7 +267,7 @@ func Abs(x int) int {
 	return x
 }
 
-func partOne(areas []Area) int {
+func partOne(areas []Area) {
 	dots1 := map[Position]bool{}
 	for _, area := range areas {
 		if area.inBounds(50) {
@@ -248,7 +289,6 @@ func partOne(areas []Area) int {
 	}
 
 	fmt.Printf("In Part One are %v on.\n", counter1)
-	return counter1
 }
 
 func Max(a, b int) int {
